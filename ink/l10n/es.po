@@ -136,6 +136,11 @@ msgstr "%1 esperarán a que se cierren"
 msgid "%1, %2"
 msgstr "%1, %2"
 
+#: ink/view/receive.lua
+#, lua-format
+msgid "%d Goodnotes notebooks"
+msgstr "%d cuadernos de Goodnotes"
+
 #: ink/view/share.lua
 #, lua-format
 msgid "%d files received"
@@ -238,6 +243,10 @@ msgstr "(Nota manuscrita)"
 #: ink/guide.lua
 msgid "+ in the pen menu asks for its kind (Fineliner, Ballpoint, Fountain, Pencil, Marker, Highlighter, Watercolor...), then its size and colour."
 msgstr "Botón + en el menú de la pluma pide su tipo (Punta fina, Bolígrafo, Estilográfica, Lápiz, Marcador, ...), y luego su tamaño y color."
+
+#: ink/view/receive.lua
+msgid "1 Goodnotes notebook"
+msgstr "1 cuaderno de Goodnotes"
 
 #: ink/view/share.lua
 msgid "1 file received"
@@ -515,6 +524,10 @@ msgstr "Todo"
 msgid "All of this book's annotations will be deleted now. They wait in Ink Away's trash for 30 days in case you want them back."
 msgstr "Todas las anotaciones de este libro se eliminarán ahora. Esperan 30 días en la papelera de Ink Away por si quieres recuperarlas."
 
+#: ink/view/goodnotes.lua
+msgid "All templates in that file are already installed."
+msgstr "Todas las plantillas de ese archivo ya están instaladas."
+
 #: ink/view/layers.lua
 msgid "All the layers are merged into one drawing, hidden ones too. Undo brings the layers back."
 msgstr "Todas las capas se fusionan en un solo dibujo, también las ocultas. Deshacer devuelve las capas."
@@ -659,6 +672,7 @@ msgstr "La sincronización automática puede ralentizar el lector y gastar bater
 
 #: ink/reader/roomtool.lua
 #: ink/view/gestures.lua
+#: ink/view/goodnotes.lua
 #: ink/view/guide.lua
 #: ink/view/menus.lua
 #: ink/view/notebook.lua
@@ -818,6 +832,10 @@ msgstr "Explorar libretas"
 msgid "Bubbles"
 msgstr "Bocadillos"
 
+#: ink/view/goodnotes.lua
+msgid "Built-in templates cannot be deleted."
+msgstr "Las plantillas integradas no se pueden eliminar."
+
 #: ink/sync/errors.lua
 msgid "Busy"
 msgstr "Ocupado"
@@ -841,6 +859,7 @@ msgstr "Caligrafía"
 #: ink/view/dialogs.lua
 #: ink/view/export.lua
 #: ink/view/exportbook.lua
+#: ink/view/goodnotes.lua
 #: ink/view/images.lua
 #: ink/view/library.lua
 #: ink/view/links.lua
@@ -1147,6 +1166,10 @@ msgstr "Cornell"
 msgid "Could not check: %1."
 msgstr "No se pudo comprobar: %1."
 
+#: ink/view/goodnotes.lua
+msgid "Could not create Goodnotes notebook.\n"
+msgstr "No se pudo crear el cuaderno Goodnotes.\n"
+
 #: ink/view/export.lua
 msgid "Could not create the bookshelf ornaments folder."
 msgstr "No se pudo crear la carpeta de adornos de Bookshelf."
@@ -1178,8 +1201,17 @@ msgid "Could not export PDF.\n"
 msgstr "No se pudo exportar el PDF.\n"
 
 #: ink/view/export.lua
+#: ink/view/goodnotes.lua
 msgid "Could not export.\n"
 msgstr "No se pudo exportar.\n"
+
+#: ink/view/goodnotes.lua
+msgid "Could not import Goodnotes templates.\n"
+msgstr "No se pudieron importar las plantillas Goodnotes.\n"
+
+#: ink/view/goodnotes.lua
+msgid "Could not import that Goodnotes file.\n"
+msgstr "No se pudo importar ese archivo Goodnotes.\n"
 
 #: ink/view/exportbook.lua
 msgid "Could not make the folder.\n"
@@ -1188,6 +1220,10 @@ msgstr "No se pudo crear la carpeta.\n"
 #: ink/view/library.lua
 msgid "Could not move it.\n"
 msgstr "No se pudo mover.\n"
+
+#: ink/view/goodnotes.lua
+msgid "Could not open that Goodnotes file.\n"
+msgstr "No se pudo abrir ese archivo Goodnotes.\n"
 
 #: ink/view/notebook.lua
 msgid "Could not open that PDF."
@@ -1363,6 +1399,7 @@ msgstr "Diario"
 msgid "Damaged download"
 msgstr "Descarga dañada"
 
+#: ink/view/goodnotes.lua
 #: ink/view/settings.lua
 msgid "Dark"
 msgstr "Oscuro"
@@ -1397,6 +1434,7 @@ msgid "Default (content font)"
 msgstr "Por defecto (fuente del contenido)"
 
 #: ink/reader/inkview.lua
+#: ink/view/goodnotes.lua
 #: ink/view/layers.lua
 #: ink/view/library.lua
 #: ink/view/menus.lua
@@ -1452,11 +1490,16 @@ msgstr "Borrar recortes antiguos"
 msgid "Delete page"
 msgstr "Eliminar página"
 
+#: ink/view/goodnotes.lua
+msgid "Delete template"
+msgstr "Eliminar plantilla"
+
 #: ink/view/menus.lua
 #, lua-format
 msgid "Delete the brush “%s”?"
 msgstr "¿Eliminar el pincel “%s”?"
 
+#: ink/view/goodnotes.lua
 #: ink/view/notebook.lua
 #, lua-format
 msgid "Delete the template “%s”?"
@@ -1507,6 +1550,7 @@ msgstr "Lo eliminado se queda aquí %d días."
 msgid "Deleted things, a book's annotations too, wait 30 days and go back where they were."
 msgstr "Lo eliminado, incluidas las anotaciones de un libro, puedes recuperarlas o desaparecen en 30 días."
 
+#: ink/view/goodnotes.lua
 #: ink/view/layers.lua
 #: ink/view/library.lua
 #: ink/view/overview.lua
@@ -1847,8 +1891,17 @@ msgstr "Exportar %d página(s) como PNG"
 
 #: ink/view/export.lua
 #, lua-format
+msgid "Export %d page(s) to Goodnotes"
+msgstr "Exportar %d página(s) a Goodnotes"
+
+#: ink/view/export.lua
+#, lua-format
 msgid "Export %d page(s) to PDF"
 msgstr "Exportar %d página(s) a PDF"
+
+#: ink/view/export.lua
+msgid "Export Goodnotes"
+msgstr "Exportar Goodnotes"
 
 #: ink/view/export.lua
 msgid "Export PDF"
@@ -1857,6 +1910,10 @@ msgstr "Exportar PDF"
 #: ink/view/export.lua
 msgid "Export PNG"
 msgstr "Exportar PNG"
+
+#: ink/view/export.lua
+msgid "Export as Goodnotes"
+msgstr "Exportar como Goodnotes"
 
 #: ink/view/export.lua
 msgid "Export as PDF"
@@ -2132,6 +2189,10 @@ msgstr "Libera espacio en el lector y vuelve a intentarlo."
 msgid "From %s"
 msgstr "Desde %s"
 
+#: ink/view/notebook.lua
+msgid "From Goodnotes…"
+msgstr "Desde Goodnotes…"
+
 #: ink/view/images.lua
 msgid "From Library › Imported › Pictures."
 msgstr "Desde Biblioteca › Importados › Imágenes."
@@ -2255,6 +2316,22 @@ msgstr "Ir a la página de índice"
 #: ink/framecover.lua
 msgid "Gold"
 msgstr "Oro"
+
+#: ink/view/export.lua
+msgid "Goodnotes"
+msgstr "Goodnotes"
+
+#: ink/view/share.lua
+msgid "Goodnotes file"
+msgstr "Archivo Goodnotes"
+
+#: ink/view/goodnotes.lua
+msgid "Goodnotes templates"
+msgstr "Plantillas Goodnotes"
+
+#: ink/view/notebook.lua
+msgid "Goodnotes templates…"
+msgstr "Plantillas Goodnotes…"
 
 #: ink/view/welcome.lua
 msgid "Got it"
@@ -2446,13 +2523,36 @@ msgstr "Añade una imagen desde un archivo o desde la web. Muévela, cambia su t
 msgid "Image, Background puts a picture behind the page. Hold New drawing to start a drawing from one."
 msgstr "Imagen, Fondo: pone una imagen detrás de la página. Mantén presionado Nuevo dibujo para empezar un dibujo desde una imagen."
 
+#: ink/view/goodnotes.lua
+#: ink/view/library.lua
+msgid "Import Goodnotes file…"
+msgstr "Importar archivo Goodnotes…"
+
+#: ink/view/goodnotes.lua
+#: ink/view/library.lua
+msgid "Import Goodnotes templates…"
+msgstr "Importar plantillas Goodnotes…"
+
 #: ink/guide.lua
 msgid "Import a PDF to write on its pages, then export it back to PDF."
 msgstr "Importa un PDF para escribir en sus páginas y luego expórtalo de nuevo a PDF."
 
+#: ink/view/goodnotes.lua
+msgid "Import pack…"
+msgstr "Importar paquete…"
+
 #: ink/reader/hlcolour.lua
 msgid "Important, a word to look up, a question…"
 msgstr "Importante, una palabra que buscar, una pregunta…"
+
+#: ink/view/goodnotes.lua
+#, lua-format
+msgid "Imported %d templates"
+msgstr "%d plantillas importadas"
+
+#: ink/view/goodnotes.lua
+msgid "Imported 1 template"
+msgstr "1 plantilla importada"
 
 #: ink/sync/areas.lua
 msgid "Imported PDFs and pictures"
@@ -3232,6 +3332,7 @@ msgstr "Nueva libreta"
 msgid "New notebook from template"
 msgstr "Nueva libreta desde plantilla"
 
+#: ink/view/goodnotes.lua
 #: ink/view/notebook.lua
 msgid "New page from template"
 msgstr "Nueva página desde plantilla"
@@ -3270,6 +3371,10 @@ msgstr "Página siguiente"
 #: ink/view/pencase.lua
 msgid "Nib angle"
 msgstr "Ángulo de la punta"
+
+#: ink/view/goodnotes.lua
+msgid "No Goodnotes files or folders here."
+msgstr "No hay archivos Goodnotes ni carpetas aquí."
 
 #: ink/view/notebook.lua
 msgid "No PDFs or folders here."
@@ -3632,6 +3737,10 @@ msgstr "Abrir todos los PDF así"
 msgid "Open image as background"
 msgstr "Abrir imagen como fondo"
 
+#: main.lua
+msgid "Open in Ink Away"
+msgstr "Abrir en Ink Away"
+
 #: ink/view/export.lua
 msgid "Open the PDF now?"
 msgstr "¿Abrir el PDF ahora?"
@@ -3760,6 +3869,10 @@ msgstr "Rango de páginas (1–%d), p. ej. 3-8"
 msgid "Page starred"
 msgstr "Página marcada con estrella"
 
+#: ink/view/goodnotes.lua
+msgid "Page template"
+msgstr "Plantilla de página"
+
 #: ink/view/notebook.lua
 #: ink/view/overview.lua
 msgid "Page title"
@@ -3846,6 +3959,7 @@ msgid "Pan, above the zoom, moves the page; tap it again to go back to your tool
 msgstr "Desplazar: mueve la página; tócala de nuevo para volver a tu herramienta. Dos dedos mueven la página con cualquier herramienta."
 
 #: ink/view/export.lua
+#: ink/view/goodnotes.lua
 msgid "Paper"
 msgstr "Papel"
 
@@ -3979,6 +4093,14 @@ msgstr "Se detuvo el uso compartido con el teléfono o la computadora: el Wi-Fi 
 #, lua-format
 msgid "Phone or computer sharing stopped: nothing happened for %d minutes"
 msgstr "Se detuvo el uso compartido con el teléfono o la computadora: no pasó nada durante %d minutos"
+
+#: ink/view/library.lua
+msgid "Pick a .goodnotes file containing page templates to add to Ink Away's Goodnotes template library."
+msgstr "Elija un archivo .goodnotes con plantillas de página para añadirlo a la biblioteca de plantillas Goodnotes de Ink Away."
+
+#: ink/view/library.lua
+msgid "Pick a Goodnotes file (.goodnotes) from this reader. It opens directly in this folder."
+msgstr "Elija un archivo Goodnotes (.goodnotes) de este lector. Se abre directamente en esta carpeta."
 
 #: ink/view/library.lua
 msgid "Pick a PDF that is already on this reader. It becomes a notebook in this folder."
@@ -4413,6 +4535,19 @@ msgstr "Plantilla “%s” guardada"
 #: ink/view/export.lua
 msgid "Saved. Open it from your library."
 msgstr "Guardado. Ábrelo desde tu biblioteca."
+
+#: ink/view/goodnotes.lua
+#, lua-format
+msgid ""
+"Saved:\n"
+"%s"
+msgstr ""
+"Guardado:\n"
+"%s"
+
+#: ink/view/export.lua
+msgid "Saves an editable Goodnotes notebook (.goodnotes) you can open in Goodnotes or Ink Away."
+msgstr "Guarda un cuaderno editable de Goodnotes (.goodnotes) que puede abrir en Goodnotes o Ink Away."
 
 #: ink/view/export.lua
 msgid "Saves each page as a picture with your ink on it. It looks the same everywhere, but the file is bigger and its text can't be selected."
@@ -5053,6 +5188,10 @@ msgstr "Texto e imágenes"
 #, lua-format
 msgid "Text boxes: %d"
 msgstr "Cuadros de texto: %d"
+
+#: ink/view/goodnotes.lua
+msgid "That Goodnotes file could not be found."
+msgstr "No se pudo encontrar ese archivo Goodnotes."
 
 #: ink/view/search.lua
 msgid "That document is no longer there."
@@ -5903,6 +6042,7 @@ msgstr "Mientras te mueves por una página ampliada, un pequeño mapa muestra d�
 #: ink/framecover.lua
 #: ink/palette.lua
 #: ink/view/export.lua
+#: ink/view/goodnotes.lua
 msgid "White"
 msgstr "Blanco"
 
@@ -5968,6 +6108,7 @@ msgstr "Escribe en una nota con el lápiz o la herramienta Texto y se mueve con 
 
 #: ink/folderlook.lua
 #: ink/palette.lua
+#: ink/view/goodnotes.lua
 #: ink/view/textformat.lua
 msgid "Yellow"
 msgstr "Amarillo"

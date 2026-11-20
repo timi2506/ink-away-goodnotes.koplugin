@@ -94,7 +94,8 @@ end
 function InkAwayView:docHasContent()
     local nb = self.notebook
     if nb then
-        return (nb.template and nb.template.pdf_path) ~= nil or nb:count() > 1
+        return (nb.isGoodnotes and nb:isGoodnotes()) or (nb.hasAnyPdf and nb:hasAnyPdf())
+            or (nb.template and nb.template.pdf_path) ~= nil or nb:count() > 1
             or nb:hasInk() or not self.canvas:isEmpty()
     end
     return not self.canvas:isEmpty() or self.bg_path ~= nil
@@ -163,11 +164,13 @@ function InkAwayView:saveDocument(force)
     local path = self.doc_path
     if not self.doc_written and Storage.exists(path) then
         -- the name it was started with has been taken since
-        path = Storage.uniquePath(Storage.dirName(path), Storage.stem(path), Project.EXT)
+        path = Storage.uniquePath(Storage.dirName(path), Storage.stem(path), Project.extOf(path))
     end
     local ok, err
     if self.notebook then
-        ok, err = Project.saveNotebook(self.notebook, path, self._page_cache, { export = self.export_opts })
+        local extra = { export = self.export_opts }
+        if Project.isGoodnotes(path) then extra.replica_id = self:goodnotesReplicaId() end
+        ok, err = Project.saveNotebook(self.notebook, path, self._page_cache, extra)
     else
         ok, err = Project.save(self.canvas, path, { bg = self.bg_path, export = self.export_opts, paper = self.paper,
             layers = self:layersForFile() })
@@ -458,7 +461,7 @@ end
 function InkAwayView:renameDocument(name)
     name = (name or ""):match("^%s*(.-)%s*$")
     if name == "" or not self.doc_path then return end
-    local new = Storage.join(Storage.dirName(self.doc_path), Storage.fileName(name, Project.EXT))
+    local new = Storage.join(Storage.dirName(self.doc_path), Storage.fileName(name, Project.extOf(self.doc_path)))
     if new == self.doc_path then return end
     -- a change of case only is the same file on a case-blind file system
     if Storage.exists(new) and new:lower() ~= self.doc_path:lower() then

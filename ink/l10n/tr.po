@@ -136,6 +136,11 @@ msgstr "%1 kapatılana kadar bekleyecek"
 msgid "%1, %2"
 msgstr "%1, %2"
 
+#: ink/view/receive.lua
+#, lua-format
+msgid "%d Goodnotes notebooks"
+msgstr "%d Goodnotes defteri"
+
 #: ink/view/share.lua
 #, lua-format
 msgid "%d files received"
@@ -238,6 +243,10 @@ msgstr "(El yazısı not)"
 #: ink/guide.lua
 msgid "+ in the pen menu asks for its kind (Fineliner, Ballpoint, Fountain, Pencil, Marker, Highlighter, Watercolor...), then its size and colour."
 msgstr "Kalem menüsündeki + önce türünü (İnce uçlu, Tükenmez, Dolma kalem, Kurşun kalem, Keçeli kalem, Vurgulayıcı, Suluboya...), sonra boyutunu ve rengini sorar."
+
+#: ink/view/receive.lua
+msgid "1 Goodnotes notebook"
+msgstr "1 Goodnotes defteri"
 
 #: ink/view/share.lua
 msgid "1 file received"
@@ -515,6 +524,10 @@ msgstr "Tümü"
 msgid "All of this book's annotations will be deleted now. They wait in Ink Away's trash for 30 days in case you want them back."
 msgstr "Bu kitabın tüm notları şimdi silinecek. Geri isterseniz 30 gün boyunca Ink Away'in çöp kutusunda beklerler."
 
+#: ink/view/goodnotes.lua
+msgid "All templates in that file are already installed."
+msgstr "Bu dosyadaki tüm şablonlar zaten yüklü."
+
 #: ink/view/layers.lua
 msgid "All the layers are merged into one drawing, hidden ones too. Undo brings the layers back."
 msgstr "Tüm katmanlar, gizli olanlar da dahil, tek bir çizimde birleştirilir. Geri Al katmanları geri getirir."
@@ -659,6 +672,7 @@ msgstr "Otomatik eşitleme okuyucuyu yavaşlatabilir ve pil harcayabilir. “Şi
 
 #: ink/reader/roomtool.lua
 #: ink/view/gestures.lua
+#: ink/view/goodnotes.lua
 #: ink/view/guide.lua
 #: ink/view/menus.lua
 #: ink/view/notebook.lua
@@ -818,6 +832,10 @@ msgstr "Defterlere gözat"
 msgid "Bubbles"
 msgstr "Balonlar"
 
+#: ink/view/goodnotes.lua
+msgid "Built-in templates cannot be deleted."
+msgstr "Yerleşik şablonlar silinemez."
+
 #: ink/sync/errors.lua
 msgid "Busy"
 msgstr "Meşgul"
@@ -841,6 +859,7 @@ msgstr "Kaligrafi"
 #: ink/view/dialogs.lua
 #: ink/view/export.lua
 #: ink/view/exportbook.lua
+#: ink/view/goodnotes.lua
 #: ink/view/images.lua
 #: ink/view/library.lua
 #: ink/view/links.lua
@@ -1147,6 +1166,10 @@ msgstr "Cornell"
 msgid "Could not check: %1."
 msgstr "Denetlenemedi: %1."
 
+#: ink/view/goodnotes.lua
+msgid "Could not create Goodnotes notebook.\n"
+msgstr "Goodnotes defteri oluşturulamadı.\n"
+
 #: ink/view/export.lua
 msgid "Could not create the bookshelf ornaments folder."
 msgstr "Bookshelf süsleri klasörü oluşturulamadı."
@@ -1178,8 +1201,17 @@ msgid "Could not export PDF.\n"
 msgstr "PDF dışa aktarılamadı.\n"
 
 #: ink/view/export.lua
+#: ink/view/goodnotes.lua
 msgid "Could not export.\n"
 msgstr "Dışa aktarılamadı.\n"
+
+#: ink/view/goodnotes.lua
+msgid "Could not import Goodnotes templates.\n"
+msgstr "Goodnotes şablonları içe aktarılamadı.\n"
+
+#: ink/view/goodnotes.lua
+msgid "Could not import that Goodnotes file.\n"
+msgstr "Bu Goodnotes dosyası içe aktarılamadı.\n"
 
 #: ink/view/exportbook.lua
 msgid "Could not make the folder.\n"
@@ -1188,6 +1220,10 @@ msgstr "Klasör oluşturulamadı.\n"
 #: ink/view/library.lua
 msgid "Could not move it.\n"
 msgstr "Taşınamadı.\n"
+
+#: ink/view/goodnotes.lua
+msgid "Could not open that Goodnotes file.\n"
+msgstr "Bu Goodnotes dosyası açılamadı.\n"
 
 #: ink/view/notebook.lua
 msgid "Could not open that PDF."
@@ -1363,6 +1399,7 @@ msgstr "Günlük"
 msgid "Damaged download"
 msgstr "Bozuk indirme"
 
+#: ink/view/goodnotes.lua
 #: ink/view/settings.lua
 msgid "Dark"
 msgstr "Koyu"
@@ -1397,6 +1434,7 @@ msgid "Default (content font)"
 msgstr "Varsayılan (içerik yazı tipi)"
 
 #: ink/reader/inkview.lua
+#: ink/view/goodnotes.lua
 #: ink/view/layers.lua
 #: ink/view/library.lua
 #: ink/view/menus.lua
@@ -1452,11 +1490,16 @@ msgstr "Eski kırpıntıları sil"
 msgid "Delete page"
 msgstr "Sayfayı sil"
 
+#: ink/view/goodnotes.lua
+msgid "Delete template"
+msgstr "Şablonu sil"
+
 #: ink/view/menus.lua
 #, lua-format
 msgid "Delete the brush “%s”?"
 msgstr "“%s” fırçası silinsin mi?"
 
+#: ink/view/goodnotes.lua
 #: ink/view/notebook.lua
 #, lua-format
 msgid "Delete the template “%s”?"
@@ -1507,6 +1550,7 @@ msgstr "Silinenler burada %d gün kalır."
 msgid "Deleted things, a book's annotations too, wait 30 days and go back where they were."
 msgstr "Silinenler, bir kitabın notları da, 30 gün bekler ve eski yerlerine geri döner."
 
+#: ink/view/goodnotes.lua
 #: ink/view/layers.lua
 #: ink/view/library.lua
 #: ink/view/overview.lua
@@ -1847,8 +1891,17 @@ msgstr "%d sayfayı PNG olarak dışa aktar"
 
 #: ink/view/export.lua
 #, lua-format
+msgid "Export %d page(s) to Goodnotes"
+msgstr "%d sayfayı Goodnotes olarak dışa aktar"
+
+#: ink/view/export.lua
+#, lua-format
 msgid "Export %d page(s) to PDF"
 msgstr "%d sayfayı PDF olarak dışa aktar"
+
+#: ink/view/export.lua
+msgid "Export Goodnotes"
+msgstr "Goodnotes dışa aktar"
 
 #: ink/view/export.lua
 msgid "Export PDF"
@@ -1857,6 +1910,10 @@ msgstr "PDF'yi dışa aktar"
 #: ink/view/export.lua
 msgid "Export PNG"
 msgstr "PNG'yi dışa aktar"
+
+#: ink/view/export.lua
+msgid "Export as Goodnotes"
+msgstr "Goodnotes olarak dışa aktar"
 
 #: ink/view/export.lua
 msgid "Export as PDF"
@@ -2132,6 +2189,10 @@ msgstr "Okuyucuda yer açın ve tekrar deneyin."
 msgid "From %s"
 msgstr "%s kaynağından"
 
+#: ink/view/notebook.lua
+msgid "From Goodnotes…"
+msgstr "Goodnotes’tan…"
+
 #: ink/view/images.lua
 msgid "From Library › Imported › Pictures."
 msgstr "Kitaplık › Alınanlar › Resimler'den."
@@ -2255,6 +2316,22 @@ msgstr "İçindekiler sayfasına git"
 #: ink/framecover.lua
 msgid "Gold"
 msgstr "Altın"
+
+#: ink/view/export.lua
+msgid "Goodnotes"
+msgstr "Goodnotes"
+
+#: ink/view/share.lua
+msgid "Goodnotes file"
+msgstr "Goodnotes dosyası"
+
+#: ink/view/goodnotes.lua
+msgid "Goodnotes templates"
+msgstr "Goodnotes şablonları"
+
+#: ink/view/notebook.lua
+msgid "Goodnotes templates…"
+msgstr "Goodnotes şablonları…"
 
 #: ink/view/welcome.lua
 msgid "Got it"
@@ -2446,13 +2523,36 @@ msgstr "Resim, bir dosyadan veya internetten resim ekler. Taşıyın, yeniden bo
 msgid "Image, Background puts a picture behind the page. Hold New drawing to start a drawing from one."
 msgstr "Resim, Arka plan, sayfanın arkasına bir resim koyar. Bir resimden çizime başlamak için Yeni çizim'i basılı tutun."
 
+#: ink/view/goodnotes.lua
+#: ink/view/library.lua
+msgid "Import Goodnotes file…"
+msgstr "Goodnotes dosyasını içe aktar…"
+
+#: ink/view/goodnotes.lua
+#: ink/view/library.lua
+msgid "Import Goodnotes templates…"
+msgstr "Goodnotes şablonlarını içe aktar…"
+
 #: ink/guide.lua
 msgid "Import a PDF to write on its pages, then export it back to PDF."
 msgstr "Sayfalarına yazmak için bir PDF alın, sonra yine PDF olarak dışa aktarın."
 
+#: ink/view/goodnotes.lua
+msgid "Import pack…"
+msgstr "Paket içe aktar…"
+
 #: ink/reader/hlcolour.lua
 msgid "Important, a word to look up, a question…"
 msgstr "Önemli, bakılacak bir sözcük, bir soru…"
+
+#: ink/view/goodnotes.lua
+#, lua-format
+msgid "Imported %d templates"
+msgstr "%d şablon içe aktarıldı"
+
+#: ink/view/goodnotes.lua
+msgid "Imported 1 template"
+msgstr "1 şablon içe aktarıldı"
 
 #: ink/sync/areas.lua
 msgid "Imported PDFs and pictures"
@@ -3232,6 +3332,7 @@ msgstr "Yeni defter"
 msgid "New notebook from template"
 msgstr "Şablondan yeni defter"
 
+#: ink/view/goodnotes.lua
 #: ink/view/notebook.lua
 msgid "New page from template"
 msgstr "Şablondan yeni sayfa"
@@ -3270,6 +3371,10 @@ msgstr "Sonraki sayfa"
 #: ink/view/pencase.lua
 msgid "Nib angle"
 msgstr "Uç açısı"
+
+#: ink/view/goodnotes.lua
+msgid "No Goodnotes files or folders here."
+msgstr "Burada Goodnotes dosyası veya klasör yok."
 
 #: ink/view/notebook.lua
 msgid "No PDFs or folders here."
@@ -3632,6 +3737,10 @@ msgstr "Her PDF'yi böyle aç"
 msgid "Open image as background"
 msgstr "Resmi arka plan olarak aç"
 
+#: main.lua
+msgid "Open in Ink Away"
+msgstr "Ink Away içinde aç"
+
 #: ink/view/export.lua
 msgid "Open the PDF now?"
 msgstr "PDF şimdi açılsın mı?"
@@ -3760,6 +3869,10 @@ msgstr "Sayfa aralığı (1–%d), ör. 3-8"
 msgid "Page starred"
 msgstr "Sayfa yıldızlandı"
 
+#: ink/view/goodnotes.lua
+msgid "Page template"
+msgstr "Sayfa şablonu"
+
 #: ink/view/notebook.lua
 #: ink/view/overview.lua
 msgid "Page title"
@@ -3846,6 +3959,7 @@ msgid "Pan, above the zoom, moves the page; tap it again to go back to your tool
 msgstr "Yakınlaştırmanın üstündeki Kaydır sayfayı taşır; aracınıza dönmek için yeniden dokunun. İki parmak, her araçla sayfayı taşır."
 
 #: ink/view/export.lua
+#: ink/view/goodnotes.lua
 msgid "Paper"
 msgstr "Kâğıt"
 
@@ -3979,6 +4093,14 @@ msgstr "Telefon veya bilgisayar paylaşımı durdu: Wi-Fi kapalı"
 #, lua-format
 msgid "Phone or computer sharing stopped: nothing happened for %d minutes"
 msgstr "Telefon veya bilgisayar paylaşımı durdu: %d dakikadır hiçbir şey olmadı"
+
+#: ink/view/library.lua
+msgid "Pick a .goodnotes file containing page templates to add to Ink Away's Goodnotes template library."
+msgstr "Ink Away’in Goodnotes şablon kitaplığına eklemek için sayfa şablonları içeren bir .goodnotes dosyası seçin."
+
+#: ink/view/library.lua
+msgid "Pick a Goodnotes file (.goodnotes) from this reader. It opens directly in this folder."
+msgstr "Bu okuyucudaki bir Goodnotes dosyasını (.goodnotes) seçin. Doğrudan bu klasörde açılır."
 
 #: ink/view/library.lua
 msgid "Pick a PDF that is already on this reader. It becomes a notebook in this folder."
@@ -4413,6 +4535,19 @@ msgstr "“%s” şablonu kaydedildi"
 #: ink/view/export.lua
 msgid "Saved. Open it from your library."
 msgstr "Kaydedildi. Kitaplığınızdan açın."
+
+#: ink/view/goodnotes.lua
+#, lua-format
+msgid ""
+"Saved:\n"
+"%s"
+msgstr ""
+"Kaydedildi:\n"
+"%s"
+
+#: ink/view/export.lua
+msgid "Saves an editable Goodnotes notebook (.goodnotes) you can open in Goodnotes or Ink Away."
+msgstr "Goodnotes veya Ink Away içinde açabileceğiniz düzenlenebilir bir Goodnotes defteri (.goodnotes) kaydeder."
 
 #: ink/view/export.lua
 msgid "Saves each page as a picture with your ink on it. It looks the same everywhere, but the file is bigger and its text can't be selected."
@@ -5053,6 +5188,10 @@ msgstr "Metin ve resimler"
 #, lua-format
 msgid "Text boxes: %d"
 msgstr "Metin kutuları: %d"
+
+#: ink/view/goodnotes.lua
+msgid "That Goodnotes file could not be found."
+msgstr "Bu Goodnotes dosyası bulunamadı."
 
 #: ink/view/search.lua
 msgid "That document is no longer there."
@@ -5903,6 +6042,7 @@ msgstr "Yakınlaştırılmış bir sayfada gezinirken küçük bir harita nerede
 #: ink/framecover.lua
 #: ink/palette.lua
 #: ink/view/export.lua
+#: ink/view/goodnotes.lua
 msgid "White"
 msgstr "Beyaz"
 
@@ -5968,6 +6108,7 @@ msgstr "Bir nota kalemle veya Metin aracıyla yazın; not ile birlikte hareket e
 
 #: ink/folderlook.lua
 #: ink/palette.lua
+#: ink/view/goodnotes.lua
 #: ink/view/textformat.lua
 msgid "Yellow"
 msgstr "Sarı"

@@ -69,6 +69,7 @@ local function newId(root, data)
         local id = base .. "-" .. n
         local taken = Storage.exists(Storage.join(dirOf(root), id))
             or Storage.exists(Storage.join(dirOf(root), id .. "." .. Project.EXT))
+            or Storage.exists(Storage.join(dirOf(root), id .. "." .. Project.GN_EXT))
             or Storage.exists(Storage.join(dirOf(root), id .. ".page"))
         for _, it in ipairs(data.items) do if it.id == id then taken = true end end
         if not taken then return id end
@@ -119,7 +120,7 @@ end
 -- What an item's stored name ends in: a document's extension, a picture's own
 -- (".jpg"), nothing for a folder.
 local function suffix(item)
-    if item.kind == "doc" then return "." .. Project.EXT end
+    if item.kind == "doc" then return "." .. (item.ext or Project.EXT) end
     if item.kind == "picture" then return "." .. (item.ext or "jpg") end
     return ""
 end
@@ -150,7 +151,8 @@ end
 -- Move the drawing or notebook file at `path` to the trash. `nb` says whether
 -- it is a notebook (for how it is listed). Returns the item, or nil, err.
 function Trash.putDocument(root, path, nb)
-    return putPath(root, path, { kind = "doc", name = Storage.stem(path), nb = nb and true or false })
+    local ext = Project.isGoodnotes(path) and Project.GN_EXT or nil
+    return putPath(root, path, { kind = "doc", name = Storage.stem(path), nb = nb and true or false, ext = ext })
 end
 
 -- Move the picture (a JPEG or PNG) at `path` to the trash.
@@ -297,7 +299,8 @@ function Trash.restore(root, id, insert_page)
     local target = item.from
     if Storage.exists(target) then
         if item.kind == "doc" or item.kind == "picture" then
-            target = Storage.uniquePath(dir, Storage.stem(item.from), item.kind == "doc" and Project.EXT or item.ext or "jpg")
+            target = Storage.uniquePath(dir, Storage.stem(item.from),
+                item.kind == "doc" and (item.ext or Project.EXT) or item.ext or "jpg")
         else
             local n = 2
             repeat
@@ -318,6 +321,7 @@ end
 -- the reader (see ink/view/receive.lua): read from the start of the file,
 -- where its template is.
 local function sentPdfOf(path)
+    if Project.isGoodnotes(path) then return nil end
     local app = Storage.appRootPath()
     if not app then return nil end
     local f = io.open(path, "rb")
@@ -342,7 +346,7 @@ local function eachDoc(p, fn, depth)
     if depth > 12 or isLink(p) then return end
     if Storage.isDir(p) then
         for _, e in ipairs(Storage.list(p)) do eachDoc(e.path, fn, depth + 1) end
-    elseif p:match("%." .. Project.EXT .. "$") then
+    elseif p:lower():match("%." .. Project.EXT .. "$") or Project.isGoodnotes(p) then
         fn(p)
     end
 end
@@ -368,8 +372,9 @@ function Trash.forget(root, id)
     local pdfs = {}
     local function note(doc) local pdf = sentPdfOf(doc); if pdf then pdfs[pdf] = true end end
     if item.kind == "doc" then
-        note(base .. "." .. Project.EXT)
-        os.remove(base .. "." .. Project.EXT)
+        local file = base .. suffix(item)
+        if not Project.isGoodnotes(file) then note(file) end
+        os.remove(file)
     elseif item.kind == "page" then
         os.remove(base .. ".page")
     elseif item.kind == "picture" then

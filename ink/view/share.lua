@@ -33,6 +33,7 @@ local Http = require("ink/share/http")
 local Library = require("ink/library")
 local Net = require("ink/share/net")
 local Page = require("ink/share/page")
+local Project = require("ink/project")
 local Storage = require("ink/storage")
 
 local Screen = Device.screen
@@ -403,7 +404,7 @@ function InkAwayView:sendRoute(req, reply)
     if not path then return reply.send(404, Http.TYPES.txt, "Not found") end
     local picture = Library.isPicture(Storage.baseName(path))
     if route == "file" then
-        return reply.file(path, picture and Http.typeOf(path) or Http.TYPES.inkaway, Storage.baseName(path),
+        return reply.file(path, Http.typeOf(path), Storage.baseName(path),
             function() self:sendCounted() end)
     elseif picture then
         if route == "thumb" then return self:sendThumb(path, reply, true) end
@@ -458,7 +459,10 @@ function InkAwayView:sendListing(rel, reply)
         local links = notebook
             and { { label = "PDF", href = base .. "pdf?p=" .. p, main = true } }
             or { { label = "PNG", href = base .. "png?p=" .. p, main = true }, { label = "PDF", href = base .. "pdf?p=" .. p } }
-        links[#links + 1] = { label = _("Ink Away file"), href = base .. "file?p=" .. p }
+        links[#links + 1] = {
+            label = Project.isGoodnotes(d.path) and _("Goodnotes file") or _("Ink Away file"),
+            href = base .. "file?p=" .. p,
+        }
         o.docs[#o.docs + 1] = { name = Storage.stem(d.name), thumb = base .. "thumb?p=" .. p,
             kind = (notebook and _("Notebook") or _("Drawing")) .. " · " .. os.date("%d %b %Y", d.mtime or 0),
             links = links }
@@ -474,7 +478,8 @@ function InkAwayView:sendListing(rel, reply)
     local R = self.RECEIVE_LIMITS
     local nonce = Http.token(Http.randomBytes(12), 16)
     o.upload = { allowed = send.allow_upload, url = base .. "upload", nonce = nonce,
-        limits = { pdf = R.limits.pdf, image = R.limits.image, inkaway = R.limits.inkaway }, max_pixels = R.max_pixels }
+        limits = { pdf = R.limits.pdf, image = R.limits.image, inkaway = R.limits.inkaway,
+            goodnotes = R.limits.goodnotes }, max_pixels = R.max_pixels }
     o.accent = pageAccent(self:colorScreen())
     html(reply, 200, Page.render(o), nonce)
 end
@@ -501,7 +506,7 @@ function InkAwayView:sendExportsList(base)
         for _j, e in ipairs(Storage.list(dir)) do
             local ext = e.name:match("%.(%w+)$")
             ext = ext and ext:lower()
-            if e.mode == "file" and (ext == "pdf" or ext == "png") and e.name:sub(1, 1) ~= "." then
+            if e.mode == "file" and (ext == "pdf" or ext == "png" or ext == "goodnotes") and e.name:sub(1, 1) ~= "." then
                 files[#files + 1] = e
             end
         end
@@ -522,7 +527,8 @@ function InkAwayView:sendExport(name, reply)
     name = tostring(name or "")
     local ext = name:match("%.(%w+)$")
     ext = ext and ext:lower()
-    if name == "" or name:find("[/\\%z]") or name:sub(1, 1) == "." or (ext ~= "pdf" and ext ~= "png") then
+    if name == "" or name:find("[/\\%z]") or name:sub(1, 1) == "."
+        or (ext ~= "pdf" and ext ~= "png" and ext ~= "goodnotes") then
         return reply.send(404, Http.TYPES.txt, "Not found")
     end
     for _i, dir in ipairs(self:sendExportDirs()) do

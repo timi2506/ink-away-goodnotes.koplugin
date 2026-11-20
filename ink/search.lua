@@ -33,6 +33,7 @@ local VERSION = 1
 -- and without the folders named in `skip` (at the top only). Each entry is
 -- { kind = "folder" | "doc", name, path, dir, mtime, size }.
 function Search.walk(root, skip)
+    local Library = require("ink/library")
     local out = {}
     local function visit(dir, top)
         local ok, list = pcall(Storage.list, dir)
@@ -43,7 +44,7 @@ function Search.walk(root, skip)
                 if e.mode == "directory" then
                     out[#out + 1] = { kind = "folder", name = e.name, path = e.path, dir = dir }
                     visit(e.path, false)
-                elseif e.mode == "file" and e.name:lower():match("%." .. Project.EXT .. "$") then
+                elseif e.mode == "file" and Library.isDocument(e.name) then
                     out[#out + 1] = { kind = "doc", name = Storage.stem(e.path), path = e.path, dir = dir,
                         mtime = e.mtime, size = e.size }
                 end
@@ -64,6 +65,7 @@ local PAGES_KEY = '["pages"]={'
 -- page-title list), without reading the pages. Nil for a drawing or a file that
 -- cannot be read.
 function Search.readHead(path)
+    if Project.isGoodnotes(path) then return nil end
     local f = io.open(path, "rb")
     if not f then return nil end
     local seen, found = {}, nil
@@ -114,6 +116,7 @@ function Search.readDocument(path, inside)
     if not f then return nil end
     f:close()
     if not inside then
+        if Project.isGoodnotes(path) then return { nb = true, pages = {}, full = false } end
         local head = Search.readHead(path)
         if head and type(head.toc) == "table" then
             local pages = {}

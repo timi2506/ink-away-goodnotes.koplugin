@@ -174,6 +174,7 @@ function InkAwayView:openExport()
     local o = self:exportOptions()
     local nb, book = self.notebook, self.book
     local paged = nb or book
+    if book and o.fmt == "goodnotes" then o.fmt = "pdf" end
     local count = paged and self:exportCount() or 1
     local pdf_src = paged and self:exportPdf() or nil
     local can_edit = pdf_src and o.fmt == "pdf" and self:exportEditable() or false
@@ -201,7 +202,9 @@ function InkAwayView:openExport()
         add(vspan(16))
         add(self:sheetLabel(_("Format"), true))
         add(vspan(6))
-        add(self:segmentedRow({ { "png", _("PNG images") }, { "pdf", _("PDF") } }, o.fmt, content_w,
+        local fmt_choices = book and { { "png", _("PNG images") }, { "pdf", _("PDF") } }
+            or { { "png", _("PNG images") }, { "pdf", _("PDF") }, { "goodnotes", _("Goodnotes") } }
+        add(self:segmentedRow(fmt_choices, o.fmt, content_w,
             function(v) o.fmt = v; reopen() end))
         if can_edit then
             add(vspan(12))
@@ -238,7 +241,10 @@ function InkAwayView:openExport()
                     function() closeSelf(); self:promptExportRange() end))
             end
         end
-        if o.fmt == "png" then
+        if o.fmt == "goodnotes" then
+            add(vspan(4))
+            add(self:sheetHint(_("Saves an editable Goodnotes notebook (.goodnotes) you can open in Goodnotes or Ink Away."), content_w))
+        elseif o.fmt == "png" then
             if paged and o.scope ~= "page" then
                 add(vspan(4))
                 add(self:sheetHint(_("One PNG per page, in a folder of its own."), content_w))
@@ -269,9 +275,9 @@ function InkAwayView:openExport()
                     function(v) o.on_paper = v; reopen() end))
             end
         end
-        if not editable then
+        if not editable and o.fmt ~= "goodnotes" then
             if nb then
-                toggle(pdf_src and _("Include the PDF page") or _("Include the paper"), "include_bg")
+                toggle((pdf_src or (nb.hasAnyPdf and nb:hasAnyPdf())) and _("Include the PDF page") or _("Include the paper"), "include_bg")
             elseif book then
                 toggle(_("Include the book's pages"), "include_bg")
                 if not o.include_bg then
@@ -301,6 +307,9 @@ function InkAwayView:openExport()
         local label = _("Export PNG")
         if editable then
             label = _("Export editable PDF")
+        elseif o.fmt == "goodnotes" then
+            label = paged and string.format(_("Export %d page(s) to Goodnotes"), #self:exportPageList())
+                or _("Export Goodnotes")
         elseif o.fmt == "pdf" then
             label = paged and string.format(_("Export %d page(s) to PDF"), #self:exportPageList())
                 or _("Export PDF")
@@ -402,7 +411,9 @@ function InkAwayView:promptExportName(name, dir)
     local paged = self.notebook or self.book
     -- PNGs of several pages go in a folder of their own, named here
     local folder = ext == "png" and paged and o.scope ~= "page" and #self:exportPageList() > 1
-    local title = ext == "pdf" and _("Export as PDF") or folder and _("Export as images") or _("Export as PNG")
+    local title = ext == "pdf" and _("Export as PDF")
+        or ext == "goodnotes" and _("Export as Goodnotes")
+        or folder and _("Export as images") or _("Export as PNG")
     self:askExportPath{
         title = title,
         name = name or o.name or self:exportName(), default = self:exportName(),
@@ -411,6 +422,7 @@ function InkAwayView:promptExportName(name, dir)
         on_path = function(path)
             o.name = Storage.stem(path)
             if ext == "pdf" then self:writeExport(path)
+            elseif ext == "goodnotes" then self:writeGoodnotes(path, { indices = paged and self:selectedNotebookPages() or nil })
             elseif paged and (folder or self.book) then self:writePagesPNG(path)
             elseif paged and o.scope ~= "page" then self:writePagesPNG(path)
             else self:writePNG(path) end
@@ -435,9 +447,12 @@ end
 function InkAwayView:pageExportTemplate(nb, i, choice, ruled)
     local template = {}
     for k, v in pairs(nb.template) do template[k] = v end
+    local page = nb.pages and nb.pages[i]
     template.style = nb:pageTemplate(i).style
-    dress(template, exportPaperFor(nb.template.paper, choice, ruled), template.strength)
-    if not ruled and not template.pdf_path then template.style = "blank" end
+    local pdf = (nb.pagePdf and nb:pagePdf(i)) or template.pdf_path
+    template.pdf_path = pdf
+    dress(template, exportPaperFor((page and page._gn_paper_rgb) or nb.template.paper, choice, ruled), template.strength)
+    if not ruled and not pdf then template.style = "blank" end
     return template
 end
 
@@ -542,8 +557,9 @@ function InkAwayView:collectDocumentPages(path, acc)
             pages[#pages + 1] = page.ops
             acc.places[#pages] = { path = path, id = page.id }
             templates[#pages] = self:pageExportTemplate(nb, i, "page", true)
-            if nb.template.pdf_path and page.src then
-                sources[#pages] = { pdf = nb.template.pdf_path, src = page.src }
+            local pdf_path = nb:pagePdf(i)
+            if pdf_path and page.src then
+                sources[#pages] = { pdf = pdf_path, src = page.src }
             end
             if page.title then item.kids[#item.kids + 1] = { title = page.title, page = #pages } end
         end

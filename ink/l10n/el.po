@@ -136,6 +136,11 @@ msgstr "%1 θα περιμένουν μέχρι να κλείσουν"
 msgid "%1, %2"
 msgstr "%1, %2"
 
+#: ink/view/receive.lua
+#, lua-format
+msgid "%d Goodnotes notebooks"
+msgstr "%d σημειωματάρια Goodnotes"
+
 #: ink/view/share.lua
 #, lua-format
 msgid "%d files received"
@@ -238,6 +243,10 @@ msgstr "(Χειρόγραφη σημείωση)"
 #: ink/guide.lua
 msgid "+ in the pen menu asks for its kind (Fineliner, Ballpoint, Fountain, Pencil, Marker, Highlighter, Watercolor...), then its size and colour."
 msgstr "Το + στο μενού των στυλό ρωτά το είδος (λεπτός μαρκαδόρος, στυλό διαρκείας, πένα, μολύβι, μαρκαδόρος, υπογραμμιστής, νερομπογιά…) και μετά το μέγεθος και το χρώμα."
+
+#: ink/view/receive.lua
+msgid "1 Goodnotes notebook"
+msgstr "1 σημειωματάριο Goodnotes"
 
 #: ink/view/share.lua
 msgid "1 file received"
@@ -515,6 +524,10 @@ msgstr "Όλα"
 msgid "All of this book's annotations will be deleted now. They wait in Ink Away's trash for 30 days in case you want them back."
 msgstr "Όλες οι σημειώσεις αυτού του βιβλίου θα διαγραφούν τώρα. Μένουν στον κάδο του Ink Away για 30 ημέρες, σε περίπτωση που τις θέλετε πίσω."
 
+#: ink/view/goodnotes.lua
+msgid "All templates in that file are already installed."
+msgstr "Όλα τα πρότυπα σε αυτό το αρχείο είναι ήδη εγκατεστημένα."
+
 #: ink/view/layers.lua
 msgid "All the layers are merged into one drawing, hidden ones too. Undo brings the layers back."
 msgstr "Όλα τα επίπεδα συγχωνεύονται σε ένα σχέδιο, και τα κρυφά. Η Αναίρεση επαναφέρει τα επίπεδα."
@@ -659,6 +672,7 @@ msgstr "Ο αυτόματος συγχρονισμός μπορεί να επι�
 
 #: ink/reader/roomtool.lua
 #: ink/view/gestures.lua
+#: ink/view/goodnotes.lua
 #: ink/view/guide.lua
 #: ink/view/menus.lua
 #: ink/view/notebook.lua
@@ -818,6 +832,10 @@ msgstr "Περιήγηση σημειωματαρίων"
 msgid "Bubbles"
 msgstr "Φούσκες"
 
+#: ink/view/goodnotes.lua
+msgid "Built-in templates cannot be deleted."
+msgstr "Τα ενσωματωμένα πρότυπα δεν μπορούν να διαγραφούν."
+
 #: ink/sync/errors.lua
 msgid "Busy"
 msgstr "Απασχολημένο"
@@ -841,6 +859,7 @@ msgstr "Καλλιγραφία"
 #: ink/view/dialogs.lua
 #: ink/view/export.lua
 #: ink/view/exportbook.lua
+#: ink/view/goodnotes.lua
 #: ink/view/images.lua
 #: ink/view/library.lua
 #: ink/view/links.lua
@@ -1147,6 +1166,10 @@ msgstr "Cornell"
 msgid "Could not check: %1."
 msgstr "Δεν ήταν δυνατός ο έλεγχος: %1."
 
+#: ink/view/goodnotes.lua
+msgid "Could not create Goodnotes notebook.\n"
+msgstr "Αδυναμία δημιουργίας σημειωματαρίου Goodnotes.\n"
+
 #: ink/view/export.lua
 msgid "Could not create the bookshelf ornaments folder."
 msgstr "Δεν ήταν δυνατή η δημιουργία του φακέλου στολιδιών του Bookshelf."
@@ -1178,8 +1201,17 @@ msgid "Could not export PDF.\n"
 msgstr "Δεν ήταν δυνατή η εξαγωγή του PDF.\n"
 
 #: ink/view/export.lua
+#: ink/view/goodnotes.lua
 msgid "Could not export.\n"
 msgstr "Δεν ήταν δυνατή η εξαγωγή.\n"
+
+#: ink/view/goodnotes.lua
+msgid "Could not import Goodnotes templates.\n"
+msgstr "Αδυναμία εισαγωγής προτύπων Goodnotes.\n"
+
+#: ink/view/goodnotes.lua
+msgid "Could not import that Goodnotes file.\n"
+msgstr "Αδυναμία εισαγωγής αυτού του αρχείου Goodnotes.\n"
 
 #: ink/view/exportbook.lua
 msgid "Could not make the folder.\n"
@@ -1188,6 +1220,10 @@ msgstr "Δεν ήταν δυνατή η δημιουργία του φακέλο
 #: ink/view/library.lua
 msgid "Could not move it.\n"
 msgstr "Δεν ήταν δυνατή η μετακίνηση.\n"
+
+#: ink/view/goodnotes.lua
+msgid "Could not open that Goodnotes file.\n"
+msgstr "Αδυναμία ανοίγματος αυτού του αρχείου Goodnotes.\n"
 
 #: ink/view/notebook.lua
 msgid "Could not open that PDF."
@@ -1363,6 +1399,7 @@ msgstr "Ημερήσιο"
 msgid "Damaged download"
 msgstr "Κατεστραμμένη λήψη"
 
+#: ink/view/goodnotes.lua
 #: ink/view/settings.lua
 msgid "Dark"
 msgstr "Σκούρο"
@@ -1397,6 +1434,7 @@ msgid "Default (content font)"
 msgstr "Προεπιλογή (γραμματοσειρά περιεχομένου)"
 
 #: ink/reader/inkview.lua
+#: ink/view/goodnotes.lua
 #: ink/view/layers.lua
 #: ink/view/library.lua
 #: ink/view/menus.lua
@@ -1452,11 +1490,16 @@ msgstr "Διαγραφή παλιών αποσπασμάτων"
 msgid "Delete page"
 msgstr "Διαγραφή σελίδας"
 
+#: ink/view/goodnotes.lua
+msgid "Delete template"
+msgstr "Διαγραφή προτύπου"
+
 #: ink/view/menus.lua
 #, lua-format
 msgid "Delete the brush “%s”?"
 msgstr "Διαγραφή του πινέλου «%s»;"
 
+#: ink/view/goodnotes.lua
 #: ink/view/notebook.lua
 #, lua-format
 msgid "Delete the template “%s”?"
@@ -1507,6 +1550,7 @@ msgstr "Τα διαγραμμένα μένουν εδώ %d ημέρες."
 msgid "Deleted things, a book's annotations too, wait 30 days and go back where they were."
 msgstr "Τα διαγραμμένα, και οι σημειώσεις ενός βιβλίου, περιμένουν 30 ημέρες και επιστρέφουν εκεί που ήταν."
 
+#: ink/view/goodnotes.lua
 #: ink/view/layers.lua
 #: ink/view/library.lua
 #: ink/view/overview.lua
@@ -1847,8 +1891,17 @@ msgstr "Εξαγωγή %d σελίδων ως PNG"
 
 #: ink/view/export.lua
 #, lua-format
+msgid "Export %d page(s) to Goodnotes"
+msgstr "Εξαγωγή %d σελίδας(-ων) σε Goodnotes"
+
+#: ink/view/export.lua
+#, lua-format
 msgid "Export %d page(s) to PDF"
 msgstr "Εξαγωγή %d σελίδων σε PDF"
+
+#: ink/view/export.lua
+msgid "Export Goodnotes"
+msgstr "Εξαγωγή Goodnotes"
 
 #: ink/view/export.lua
 msgid "Export PDF"
@@ -1857,6 +1910,10 @@ msgstr "Εξαγωγή PDF"
 #: ink/view/export.lua
 msgid "Export PNG"
 msgstr "Εξαγωγή PNG"
+
+#: ink/view/export.lua
+msgid "Export as Goodnotes"
+msgstr "Εξαγωγή ως Goodnotes"
 
 #: ink/view/export.lua
 msgid "Export as PDF"
@@ -2132,6 +2189,10 @@ msgstr "Ελευθερώστε χώρο στη συσκευή και δοκιμ�
 msgid "From %s"
 msgstr "Από %s"
 
+#: ink/view/notebook.lua
+msgid "From Goodnotes…"
+msgstr "Από Goodnotes…"
+
 #: ink/view/images.lua
 msgid "From Library › Imported › Pictures."
 msgstr "Από Βιβλιοθήκη › Εισαγμένα › Εικόνες."
@@ -2255,6 +2316,22 @@ msgstr "Μετάβαση στη σελίδα περιεχομένων"
 #: ink/framecover.lua
 msgid "Gold"
 msgstr "Χρυσό"
+
+#: ink/view/export.lua
+msgid "Goodnotes"
+msgstr "Goodnotes"
+
+#: ink/view/share.lua
+msgid "Goodnotes file"
+msgstr "Αρχείο Goodnotes"
+
+#: ink/view/goodnotes.lua
+msgid "Goodnotes templates"
+msgstr "Πρότυπα Goodnotes"
+
+#: ink/view/notebook.lua
+msgid "Goodnotes templates…"
+msgstr "Πρότυπα Goodnotes…"
 
 #: ink/view/welcome.lua
 msgid "Got it"
@@ -2446,13 +2523,36 @@ msgstr "Η Εικόνα προσθέτει μία από αρχείο ή από 
 msgid "Image, Background puts a picture behind the page. Hold New drawing to start a drawing from one."
 msgstr "Εικόνα, Φόντο βάζει μια εικόνα πίσω από τη σελίδα. Κρατήστε πατημένο το Νέο σχέδιο για να ξεκινήσετε ένα σχέδιο από εικόνα."
 
+#: ink/view/goodnotes.lua
+#: ink/view/library.lua
+msgid "Import Goodnotes file…"
+msgstr "Εισαγωγή αρχείου Goodnotes…"
+
+#: ink/view/goodnotes.lua
+#: ink/view/library.lua
+msgid "Import Goodnotes templates…"
+msgstr "Εισαγωγή προτύπων Goodnotes…"
+
 #: ink/guide.lua
 msgid "Import a PDF to write on its pages, then export it back to PDF."
 msgstr "Εισαγάγετε ένα PDF για να γράψετε στις σελίδες του και μετά εξαγάγετέ το πάλι σε PDF."
 
+#: ink/view/goodnotes.lua
+msgid "Import pack…"
+msgstr "Εισαγωγή πακέτου…"
+
 #: ink/reader/hlcolour.lua
 msgid "Important, a word to look up, a question…"
 msgstr "Σημαντικό, λέξη για αναζήτηση, ερώτηση…"
+
+#: ink/view/goodnotes.lua
+#, lua-format
+msgid "Imported %d templates"
+msgstr "Εισήχθησαν %d πρότυπα"
+
+#: ink/view/goodnotes.lua
+msgid "Imported 1 template"
+msgstr "Εισήχθη 1 πρότυπο"
 
 #: ink/sync/areas.lua
 msgid "Imported PDFs and pictures"
@@ -3232,6 +3332,7 @@ msgstr "Νέο σημειωματάριο"
 msgid "New notebook from template"
 msgstr "Νέο σημειωματάριο από πρότυπο"
 
+#: ink/view/goodnotes.lua
 #: ink/view/notebook.lua
 msgid "New page from template"
 msgstr "Νέα σελίδα από πρότυπο"
@@ -3270,6 +3371,10 @@ msgstr "Επόμενη σελίδα"
 #: ink/view/pencase.lua
 msgid "Nib angle"
 msgstr "Γωνία πένας"
+
+#: ink/view/goodnotes.lua
+msgid "No Goodnotes files or folders here."
+msgstr "Δεν υπάρχουν αρχεία Goodnotes ή φάκελοι εδώ."
 
 #: ink/view/notebook.lua
 msgid "No PDFs or folders here."
@@ -3632,6 +3737,10 @@ msgstr "Άνοιγμα κάθε PDF με αυτόν τον τρόπο"
 msgid "Open image as background"
 msgstr "Άνοιγμα εικόνας ως φόντου"
 
+#: main.lua
+msgid "Open in Ink Away"
+msgstr "Άνοιγμα στο Ink Away"
+
 #: ink/view/export.lua
 msgid "Open the PDF now?"
 msgstr "Να ανοίξει τώρα το PDF;"
@@ -3760,6 +3869,10 @@ msgstr "Εύρος σελίδων (1–%d), π.χ. 3-8"
 msgid "Page starred"
 msgstr "Η σελίδα σημειώθηκε με αστέρι"
 
+#: ink/view/goodnotes.lua
+msgid "Page template"
+msgstr "Πρότυπο σελίδας"
+
 #: ink/view/notebook.lua
 #: ink/view/overview.lua
 msgid "Page title"
@@ -3846,6 +3959,7 @@ msgid "Pan, above the zoom, moves the page; tap it again to go back to your tool
 msgstr "Η Μετακίνηση, πάνω από το ζουμ, μετακινεί τη σελίδα· πατήστε την ξανά για να γυρίσετε στο εργαλείο σας. Δύο δάχτυλα μετακινούν τη σελίδα με οποιοδήποτε εργαλείο."
 
 #: ink/view/export.lua
+#: ink/view/goodnotes.lua
 msgid "Paper"
 msgstr "Χαρτί"
 
@@ -3979,6 +4093,14 @@ msgstr "Η κοινή χρήση με τηλέφωνο ή υπολογιστή �
 #, lua-format
 msgid "Phone or computer sharing stopped: nothing happened for %d minutes"
 msgstr "Η κοινή χρήση με τηλέφωνο ή υπολογιστή σταμάτησε: δεν έγινε τίποτα για %d λεπτά"
+
+#: ink/view/library.lua
+msgid "Pick a .goodnotes file containing page templates to add to Ink Away's Goodnotes template library."
+msgstr "Επιλέξτε ένα αρχείο .goodnotes με πρότυπα σελίδων για προσθήκη στη βιβλιοθήκη προτύπων Goodnotes του Ink Away."
+
+#: ink/view/library.lua
+msgid "Pick a Goodnotes file (.goodnotes) from this reader. It opens directly in this folder."
+msgstr "Επιλέξτε ένα αρχείο Goodnotes (.goodnotes) από αυτή τη συσκευή ανάγνωσης. Ανοίγει απευθείας σε αυτόν τον φάκελο."
 
 #: ink/view/library.lua
 msgid "Pick a PDF that is already on this reader. It becomes a notebook in this folder."
@@ -4413,6 +4535,19 @@ msgstr "Αποθηκεύτηκε το πρότυπο «%s»"
 #: ink/view/export.lua
 msgid "Saved. Open it from your library."
 msgstr "Αποθηκεύτηκε. Ανοίξτε το από τη βιβλιοθήκη σας."
+
+#: ink/view/goodnotes.lua
+#, lua-format
+msgid ""
+"Saved:\n"
+"%s"
+msgstr ""
+"Αποθηκεύτηκε:\n"
+"%s"
+
+#: ink/view/export.lua
+msgid "Saves an editable Goodnotes notebook (.goodnotes) you can open in Goodnotes or Ink Away."
+msgstr "Αποθηκεύει ένα επεξεργάσιμο σημειωματάριο Goodnotes (.goodnotes) που μπορείτε να ανοίξετε στο Goodnotes ή στο Ink Away."
 
 #: ink/view/export.lua
 msgid "Saves each page as a picture with your ink on it. It looks the same everywhere, but the file is bigger and its text can't be selected."
@@ -5053,6 +5188,10 @@ msgstr "Κείμενο και εικόνες"
 #, lua-format
 msgid "Text boxes: %d"
 msgstr "Πλαίσια κειμένου: %d"
+
+#: ink/view/goodnotes.lua
+msgid "That Goodnotes file could not be found."
+msgstr "Αυτό το αρχείο Goodnotes δεν βρέθηκε."
 
 #: ink/view/search.lua
 msgid "That document is no longer there."
@@ -5903,6 +6042,7 @@ msgstr "Όσο κινείστε σε μια μεγεθυμένη σελίδα, �
 #: ink/framecover.lua
 #: ink/palette.lua
 #: ink/view/export.lua
+#: ink/view/goodnotes.lua
 msgid "White"
 msgstr "Άσπρο"
 
@@ -5968,6 +6108,7 @@ msgstr "Γράψτε σε μια σημείωση με το στυλό ή το �
 
 #: ink/folderlook.lua
 #: ink/palette.lua
+#: ink/view/goodnotes.lua
 #: ink/view/textformat.lua
 msgid "Yellow"
 msgstr "Κίτρινο"

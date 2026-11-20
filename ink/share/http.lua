@@ -14,6 +14,7 @@ Http.TYPES = {
     png = "image/png",
     jpg = "image/jpeg",
     inkaway = "application/octet-stream",
+    goodnotes = "application/octet-stream",
 }
 
 local REASONS = { [200] = "OK", [400] = "Bad Request", [404] = "Not Found", [405] = "Method Not Allowed",
@@ -93,6 +94,11 @@ function Http.sniff(head)
     if head:sub(1, 4) == "RIFF" and head:sub(9, 12) == "WEBP" then return "webp" end
     if head:match("^%s*return%s*{") then return "inkaway" end
     return nil
+end
+
+-- Does `head` begin with a PKZIP local file header (e.g. a `.goodnotes` archive)?
+function Http.isZip(head)
+    return tostring(head or ""):sub(1, 4) == "PK\3\4"
 end
 
 local function u16be(s, i) return s:byte(i) * 256 + s:byte(i + 1) end

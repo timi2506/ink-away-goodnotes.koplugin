@@ -160,7 +160,8 @@ function InkAway:init()
             end
         end
     end
-    -- a long press on a PDF in the file browser offers it as an Ink Away notebook
+    -- a long press on a PDF in the file browser offers it as an Ink Away notebook,
+    -- and a long press on a .goodnotes file imports and opens it
     if not self.ui.document and self.ui.addFileDialogButtons then
         self.ui:addFileDialogButtons("inkaway_pdf", function(file, is_file)
             if not (is_file and file:lower():match("%.pdf$")) then return nil end
@@ -169,6 +170,15 @@ function InkAway:init()
                 local fm = FileManager.instance
                 if fm and fm.file_dialog then UIManager:close(fm.file_dialog) end
                 self:openPdfAsNotebook(file)
+            end } }
+        end)
+        self.ui:addFileDialogButtons("inkaway_goodnotes", function(file, is_file)
+            if not (is_file and file:lower():match("%.goodnotes$")) then return nil end
+            return { { text = _("Open in Ink Away"), callback = function()
+                local FileManager = require("apps/filemanager/filemanager")
+                local fm = FileManager.instance
+                if fm and fm.file_dialog then UIManager:close(fm.file_dialog) end
+                self:importGoodnotesFile(file)
             end } }
         end)
     end
@@ -553,6 +563,12 @@ end
 function InkAway:openPdfAsNotebook(path)
     local view = self:openCanvas()
     view:startPdfNotebook(path, view:libraryDir())
+end
+
+-- Import a `.goodnotes` file from the file browser into the library and open it.
+function InkAway:importGoodnotesFile(path)
+    local view = self:openCanvas()
+    view:importGoodnotesFile(path, view:libraryDir())
 end
 
 -- Open the canvas, with the library on top when `library` is set, or on the

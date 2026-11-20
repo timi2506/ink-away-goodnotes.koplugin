@@ -322,10 +322,11 @@ end
 -- Draw one page of a notebook that is not open, the size of the page, shrunk to
 -- fit maxw x maxh.
 function InkAwayView:renderOtherPage(nb, i, maxw, maxh)
-    local W, H = self.view.canvas_w, self.view.canvas_h
+    local W, H = nb:pageSize(i)
     local page = nb.pages[i]
     local scratch = Blitbuffer.new(W, H, self.canvas_bb and self.canvas_bb:getType() or Blitbuffer.TYPE_BBRGB32)
-    local bg = nb.template.pdf_path and page.src and self:overviewPdfPage(nb.template.pdf_path, page.src, W, H)
+    local pdf_path = nb:pagePdf(i)
+    local bg = pdf_path and page.src and self:overviewPdfPage(pdf_path, page.src, W, H)
     self:trueColours(function()   -- (kept as a file, shown in day mode too)
         self:withOwnImageCache(function() self:composeInto(scratch, page.ops, bg, nb:pageTemplate(i)) end)
     end)
@@ -348,9 +349,11 @@ function InkAwayView:openPageThumb(i, maxw, maxh)
     local page = nb and nb.pages[i]
     if not page then return nil end
     local t = nb:pageTemplate(i)
+    local pw, ph = nb:pageSize(i)
+    local pdf_path = nb:pagePdf(i)
     local paper = type(t.paper) == "table" and table.concat(t.paper, ",") or "white"
     local sig = table.concat({ maxw, maxh, tostring(t.style), tostring(t.size), tostring(t.strength),
-        tostring(t.pdf_path), tostring(page.src), paper }, "|")
+        tostring(pdf_path), tostring(page.src), tostring(pw), tostring(ph), paper }, "|")
     local kept = self._page_thumbs
     if not kept then kept = { order = {} }; self._page_thumbs = kept end
     local e = kept[page]
@@ -646,7 +649,7 @@ function InkAwayView:overviewRenameTab(it)
         on_ok = function(text)
             local name = (text or ""):gsub("[/\\]", "_"):match("^%s*(.-)%s*$")
             if name == "" or name == it.label or (it.folder and name:sub(1, 1) == ".") then return end
-            local new = Storage.join(dir, it.folder and name or Storage.fileName(name, Project.EXT))
+            local new = Storage.join(dir, it.folder and name or Storage.fileName(name, Project.extOf(it.path)))
             if it.path == self.doc_path then
                 self:renameDocument(name)
                 if self.doc_path ~= new then return end

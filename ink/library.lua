@@ -29,13 +29,14 @@ Library.INTERNAL = { drawings = true, notebooks = true, exports = true,
 
 -- Is `name` a document file?
 function Library.isDocument(name)
-    return name:lower():match("%." .. Project.EXT .. "$") ~= nil
+    local low = name:lower()
+    return low:match("%." .. Project.EXT .. "$") ~= nil or Project.isGoodnotes(low)
 end
 
--- Is the document at `path` a notebook? Only the start of the file is read: a
--- notebook lists its pages before any ink, a drawing starts its ops early, and
--- neither key can hide in a string (their quotes would be escaped).
+-- Is the document at `path` a notebook? Goodnotes files are always notebooks;
+-- for `.inkaway` files only the start is read.
 function Library.isNotebookFile(path)
+    if Project.isGoodnotes(path) then return true end
     local f = io.open(path, "rb") or io.open(path .. ".tmp", "rb")
     if not f then return false end
     local seen = ""
@@ -113,8 +114,14 @@ end
 -- Copy the document at `path` next to it under a free name. Returns the new
 -- path, or nil, err.
 function Library.duplicate(path, dir)
-    local target = Storage.uniquePath(dir or Storage.dirName(path), Storage.stem(path), Project.EXT)
-    local ok, err = Storage.copyFile(path, target)
+    local ext = Project.extOf(path)
+    local target = Storage.uniquePath(dir or Storage.dirName(path), Storage.stem(path), ext)
+    local ok, err
+    if Project.isGoodnotes(path) then
+        ok, err = require("ink/goodnotes/document").duplicate(path, target)
+    else
+        ok, err = Storage.copyFile(path, target)
+    end
     if not ok then return nil, err end
     return target
 end
@@ -145,10 +152,12 @@ end
 -- over an imported PDF?
 function Library.hasContent(data)
     if type(data) ~= "table" then return false end
+    if data.format == "goodnotes" then return true end
     if type(data.ops) == "table" then return #data.ops > 0 or data.bg ~= nil end
     if type(data.pages) ~= "table" then return false end
     if #data.pages > 1 or (data.template and data.template.pdf_path) then return true end
     local p = data.pages[1]
+    if type(p) == "table" and p.pdf_path then return true end
     local ops = type(p) == "table" and (p.ops or (p.src == nil and p.id == nil and p)) or nil
     return type(ops) == "table" and #ops > 0
 end

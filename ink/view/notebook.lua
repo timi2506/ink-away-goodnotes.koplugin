@@ -154,15 +154,23 @@ function InkAwayView:nbLoad()
     -- leaving the first page: its Bookshelf cover keeps a snapshot of it, from
     -- the canvas, which still shows it (see shelfSnapshot)
     self:shelfSnapshot(self._shown_page ~= nil and self._shown_page == self.notebook.pages[1])
+    local nb = self.notebook
+    if self.nb_fit and nb.pageSize then
+        local pw, ph = nb:pageSize(nb.index)
+        if pw and ph and (self.view.canvas_w ~= pw or self.view.canvas_h ~= ph) then
+            self:resizePage(pw, ph)
+            self:recomputeArea()
+        end
+    end
     -- drop the previous page's image decodes so memory stays flat over many
     -- pages; composeCanvas decodes what this page uses (the bar icon cache stays)
     self:freeImageCache()
     self:loadNotebookPageBackground()   -- swap in this page's PDF image (if any)
-    self.canvas:setOps(self.notebook:currentOps())
+    self.canvas:setOps(nb:currentOps())
     self._page_rev = self.canvas.rev
     self:resetLasso()
     self:composeCanvas(); self:renderView()
-    self._shown_page = self.notebook.pages[self.notebook.index]   -- the page the canvas shows
+    self._shown_page = nb.pages[nb.index]   -- the page the canvas shows
     self:rememberLastPage()
     -- Like KOReader's reader, turn pages with a non-flashing refresh ("partial" on
     -- grey, "ui" on colour, where a flash takes a second or two) and flash only
@@ -179,22 +187,60 @@ function InkAwayView:nbLoad()
     end
 end
 
--- Keep one open handle to the source PDF for the session, so a page turn does not
--- pay the cost of opening it again.
+-- Keep up to 4 open handles to source PDFs (a Goodnotes notebook can mix PDF
+-- templates/scans across pages), evicting the oldest handle when full.
+function InkAwayView:openNotebookPdf(path)
+    if not path then return nil end
+    if self._nb_pdf_doc and self._nb_pdf_path == path then return self._nb_pdf_doc end
+    self._nb_pdf_docs = self._nb_pdf_docs or {}
+    self._nb_pdf_lru = self._nb_pdf_lru or {}
+    local doc = self._nb_pdf_docs[path]
+    if doc == false then return nil end
+    if not doc then
+        local ok, opened = pcall(function() return require("document/documentregistry"):openDocument(path) end)
+        if ok and opened then
+            doc = opened
+            self._nb_pdf_docs[path] = doc
+            self._nb_pdf_lru[#self._nb_pdf_lru + 1] = path
+            while #self._nb_pdf_lru > 4 do
+                local evict = table.remove(self._nb_pdf_lru, 1)
+                if evict ~= path and self._nb_pdf_docs[evict] then
+                    pcall(function() self._nb_pdf_docs[evict]:close() end)
+                    self._nb_pdf_docs[evict] = nil
+                end
+            end
+        else
+            self._nb_pdf_docs[path] = false
+            return nil
+        end
+    end
+    self._nb_pdf_doc, self._nb_pdf_path = doc, path
+    return doc
+end
+
+-- Keep one open handle to the current page's source PDF for the session, so a
+-- page turn does not pay the cost of opening it again.
 function InkAwayView:ensureNotebookPDF()
-    local t = self.notebook and self.notebook.template
-    if not (t and t.pdf_path) then return end
-    if self._nb_pdf_doc and self._nb_pdf_path == t.pdf_path then return end
-    self:closeNotebookPDF()
-    local ok, doc = pcall(function() return require("document/documentregistry"):openDocument(t.pdf_path) end)
-    self._nb_pdf_doc = ok and doc or nil
-    self._nb_pdf_path = t.pdf_path
+    local nb = self.notebook
+    local path = nb and (nb.pagePdf and nb:pagePdf(nb.index) or (nb.template and nb.template.pdf_path))
+    if not path then return end
+    self:openNotebookPdf(path)
 end
 
 function InkAwayView:closeNotebookPDF()
     self:freePdfCache()
     self._bg_src = nil
-    if self._nb_pdf_doc then pcall(function() self._nb_pdf_doc:close() end) end
+    local closed_cur = false
+    if self._nb_pdf_docs then
+        for _p, doc in pairs(self._nb_pdf_docs) do
+            if doc and doc ~= false then
+                if doc == self._nb_pdf_doc then closed_cur = true end
+                pcall(function() doc:close() end)
+            end
+        end
+    end
+    if self._nb_pdf_doc and not closed_cur then pcall(function() self._nb_pdf_doc:close() end) end
+    self._nb_pdf_docs, self._nb_pdf_lru = nil, nil
     self._nb_pdf_doc, self._nb_pdf_path = nil, nil
 end
 
@@ -203,29 +249,36 @@ end
 -- and turns as fast as a short one.
 function InkAwayView:loadNotebookPageBackground()
     local nb = self.notebook
-    local t = nb and nb.template
-    if not (t and t.pdf_path) then return end
-    self:ensureNotebookPDF()
+    local pdf_path = nb and (nb.pagePdf and nb:pagePdf(nb.index) or (nb.template and nb.template.pdf_path))
+    if not pdf_path then
+        if self.bg_bb then
+            self.bg_bb:free()
+            self.bg_bb, self._bg_src, self.bg_rgba, self.bg_path = nil, nil, nil, nil
+        end
+        return
+    end
+    local doc = self:openNotebookPdf(pdf_path)
     local src = nb:currentSrc()      -- which source page this notebook page shows
+    local key = src and (pdf_path .. "\0" .. tostring(src)) or nil
     -- Rendering is the slow part of a page turn, so the page just left is kept
     -- (turning back is instant) and the next is rendered ahead during a pause (see
     -- prefetchPdfPage). A buffer is either the background or in the cache, never
     -- both.
     local cache = self._pdf_cache or {}
     self._pdf_cache = cache
-    if self.bg_bb and self._bg_src and self._bg_src ~= src and not cache[self._bg_src] then
+    if self.bg_bb and self._bg_src and self._bg_src ~= key and not cache[self._bg_src] then
         cache[self._bg_src] = self.bg_bb             -- keep the page we are leaving
     elseif self.bg_bb then
         self.bg_bb:free()
     end
     self.bg_bb = nil
-    local img = src and cache[src]
-    if img then cache[src] = nil
-    elseif src then img = self:renderPdfPage(self._nb_pdf_doc, src) end
+    local img = key and cache[key]
+    if img then cache[key] = nil
+    elseif src and doc then img = self:renderPdfPage(doc, src) end
     self.bg_bb = img            -- canvas-sized already; nil if the render failed
-    self._bg_src = img and src or nil
+    self._bg_src = img and key or nil
     self.bg_rgba = nil          -- built on demand at export, never per page turn
-    self.bg_path = t.pdf_path
+    self.bg_path = pdf_path
     self:trimPdfCache()
     UIManager:unschedule(self._pdf_prefetch_cb)
     UIManager:scheduleIn(1.0, self._pdf_prefetch_cb)
@@ -237,8 +290,13 @@ function InkAwayView:pdfNeighbourSrcs()
     local out = {}
     if not nb then return out end
     for _, d in ipairs({ 1, -1 }) do
-        local pg = nb.pages[nb.index + d]
-        if pg and pg.src then out[#out + 1] = pg.src end
+        local idx = nb.index + d
+        local pg = nb.pages[idx]
+        local pdf = pg and (nb.pagePdf and nb:pagePdf(idx) or (nb.template and nb.template.pdf_path))
+        if pg and pdf and pg.src then
+            out[#out + 1] = { key = pdf .. "\0" .. tostring(pg.src), pdf = pdf, src = pg.src,
+                w = pg.w or nb.w, h = pg.h or nb.h }
+        end
     end
     return out
 end
@@ -248,9 +306,9 @@ function InkAwayView:trimPdfCache()
     local cache = self._pdf_cache
     if not cache then return end
     local keep = {}
-    for _, s in ipairs(self:pdfNeighbourSrcs()) do keep[s] = true end
-    for s, bb in pairs(cache) do
-        if not keep[s] then bb:free(); cache[s] = nil end
+    for _, item in ipairs(self:pdfNeighbourSrcs()) do keep[item.key] = true end
+    for k, bb in pairs(cache) do
+        if not keep[k] then bb:free(); cache[k] = nil end
     end
 end
 
@@ -259,17 +317,18 @@ end
 -- never gets in the way of writing.
 function InkAwayView:prefetchPdfPage()
     local nb = self.notebook
-    if self.closing or not (nb and nb.template and nb.template.pdf_path and self._nb_pdf_doc) then return end
+    if self.closing or not (nb and (nb:hasAnyPdf() or (nb.template and nb.template.pdf_path))) then return end
     if self.capturing or self.editing_text or (self._pen_state and self._pen_state.down)
             or self._export_job then
         return
     end
     local cache = self._pdf_cache or {}
     self._pdf_cache = cache
-    for _, s in ipairs(self:pdfNeighbourSrcs()) do
-        if not cache[s] and s ~= self._bg_src then
-            local img = self:renderPdfPage(self._nb_pdf_doc, s)
-            if img then cache[s] = img end
+    for _, item in ipairs(self:pdfNeighbourSrcs()) do
+        if not cache[item.key] and item.key ~= self._bg_src then
+            local doc = self:openNotebookPdf(item.pdf)
+            local img = doc and self:renderPdfPage(doc, item.src, item.w, item.h)
+            if img then cache[item.key] = img end
             -- one page per idle slot: if there is another to do, come back later
             UIManager:scheduleIn(0.5, self._pdf_prefetch_cb)
             return
@@ -477,6 +536,10 @@ function InkAwayView:nbPagePaper()
     local nb = self.notebook
     local page = nb and nb.pages[nb.index]
     if not page then return end
+    if nb.isGoodnotes and nb:isGoodnotes() then
+        self:openGoodnotesTemplates{ mode = "change_page" }
+        return
+    end
     self:openPaperSheet{ title = _("Paper for this page"), current = page.paper or "same",
         same = _("Same as the notebook"),
         onpick = function(v)
@@ -515,6 +578,10 @@ end
 function InkAwayView:nbFromTemplate(deleting)
     local nb = self.notebook
     if not nb then return end
+    if nb.isGoodnotes and nb:isGoodnotes() then
+        self:openGoodnotesTemplates{ mode = "add_page" }
+        return
+    end
     local root = self:libraryDir()
     local names = Templates.list(root)
     if #names == 0 then
@@ -556,14 +623,15 @@ end
 function InkAwayView:renderPageThumb(index, maxw, maxh)
     local nb = self.notebook
     if not nb or not nb.pages[index] then return nil end
-    local W, H = self.view.canvas_w, self.view.canvas_h
+    local W, H = nb:pageSize(index)
     local bbtype = self.canvas_bb and self.canvas_bb:getType() or Screen.bb:getType()
     local scratch = Blitbuffer.new(W, H, bbtype)
     local page = nb.pages[index]
+    local pdf_path = nb:pagePdf(index)
     local bg
-    if nb.template.pdf_path and page.src then
-        self:ensureNotebookPDF()
-        bg = self:renderPdfPage(self._nb_pdf_doc, page.src)
+    if pdf_path and page.src then
+        local doc = self:openNotebookPdf(pdf_path)
+        bg = doc and self:renderPdfPage(doc, page.src, W, H)
     end
     self:trueColours(function() self:composeInto(scratch, page.ops, bg, nb:pageTemplate(index)) end)
     if bg then bg:free() end
@@ -662,14 +730,25 @@ function InkAwayView:openNotebookData(data, path)
     self.save_area = nil
     local nb = Notebook.fromData(data)
     local at = path and LastPage.indexOf(nb.pages, LastPage.get(self:getSetting(LastPage.SETTING), path))
-    if at then nb.index = at end
+    if at then nb.index = at
+    elseif type(data.index) == "number" and nb.pages[data.index] then nb.index = data.index end
     -- pages made on this screen's size are the screen's; those from another reader
-    -- keep their size and are fitted to the screen (see pageNeedsFit)
-    local fit = self:adoptScreenSize(nb)
+    -- (and Goodnotes documents) keep their size and are fitted to the screen
+    local fit = (nb:isGoodnotes() or nb:hasAnyPdf()) and true or self:adoptScreenSize(nb)
     self:enterNotebook(nb, fit)
     -- warn if the source PDF of a PDF-backed notebook is gone (the ink is safe;
     -- only the page images are missing until it is back)
-    if self.notebook.template.pdf_path and not self._nb_pdf_doc then
+    if nb:isGoodnotes() then
+        for i = 1, nb:count() do
+            local pdf = nb:pagePdf(i)
+            if pdf and not self:openNotebookPdf(pdf) then
+                self:tell(string.format(
+                    _("The source PDF could not be opened:\n%s\n\nYour notes are intact, but the page images will be blank until the PDF is back in that location."),
+                    pdf))
+                break
+            end
+        end
+    elseif self.notebook.template.pdf_path and not self._nb_pdf_doc then
         self:tell(string.format(
             _("The source PDF could not be opened:\n%s\n\nYour notes are intact, but the page images will be blank until the PDF is back in that location."),
             self.notebook.template.pdf_path))
@@ -706,6 +785,8 @@ function InkAwayView:startPdfNotebook(path, dir)
     self:beginDocument("notebook", Storage.stem(path), function()
         self:closeNotebookPDF()
         self._nb_pdf_doc, self._nb_pdf_path = doc, path
+        self._nb_pdf_docs = { [path] = doc }
+        self._nb_pdf_lru = { path }
         self:clearBackground()
         self:enterNotebook(Notebook.forPdf(self.screen_w, self.screen_h, {
             style = "blank", size = self.grid_size or 40, strength = self.grid_strength or 45, pdf_path = path,
@@ -809,6 +890,17 @@ function InkAwayView:openNotebookPaper(dir)
             else
                 add(pdf)
             end
+            add(vspan(8))
+            local halfW = math.floor((content_w - gap) / 2)
+            add(HorizontalGroup:new{ align = "center",
+                self:actionButton(_("Goodnotes templates\u{2026}"), halfW, function()
+                    closeSelf()
+                    self:openGoodnotesTemplates{ mode = "new", dir = dir, on_before = closeUnder }
+                end),
+                HorizontalSpan:new{ width = gap },
+                self:actionButton(_("From Goodnotes\u{2026}"), halfW, function()
+                    closeSelf(); closeUnder(); self:openGoodnotesPicker(dir)
+                end) })
         end }
 end
 

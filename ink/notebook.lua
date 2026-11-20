@@ -26,6 +26,16 @@ local function deepcopy(v)
 end
 Notebook.deepcopy = deepcopy
 
+local function deepcopyNoGn(v)
+    if type(v) ~= "table" then return v end
+    local out = {}
+    for k, val in pairs(v) do
+        if k ~= "_gn" then out[k] = deepcopyNoGn(val) end
+    end
+    return out
+end
+Notebook.deepcopyNoGn = deepcopyNoGn
+
 -- A blank page with the next free id, tied to PDF page `src` if given.
 function Notebook:newPage(src)
     local id = self.next_id or 1
@@ -58,14 +68,15 @@ function Notebook.forPdf(w, h, template, count)
 end
 
 -- The fields a page keeps besides its ops.
-local PAGE_FIELDS = { "id", "src", "created", "modified", "title", "star", "paper", "book" }
+local PAGE_FIELDS = { "id", "src", "created", "modified", "title", "star", "paper", "book",
+    "pdf_path", "w", "h", "_gn_template_id", "_gn_paper_rgb", "_gn_builtin_tpl", "_gn_tpl_spec" }
 
 -- Normalise a loaded page: older files store a page as a bare ops array, newer
 -- ones as { ops = ..., src = ... }, and only the newest carry ids and times.
 local function normPage(p)
     if type(p) ~= "table" then return { ops = {} } end
     if p.ops == nil and p.src == nil and p.id == nil then return { ops = p } end   -- a bare ops array
-    local page = { ops = p.ops or {} }
+    local page = { ops = p.ops or {}, _gn = p._gn }
     for _, k in ipairs(PAGE_FIELDS) do page[k] = p[k] end
     return page
 end
@@ -74,6 +85,7 @@ end
 -- Pages from older files get ids here.
 function Notebook.fromData(data)
     local nb = Notebook.new(data.w, data.h, data.template)
+    nb._gn = data._gn
     if type(data.pages) == "table" and #data.pages > 0 then
         local pages, top = {}, 0
         for i = 1, #data.pages do
@@ -82,7 +94,7 @@ function Notebook.fromData(data)
         end
         nb.next_id = top + 1
         for _, page in ipairs(pages) do
-            if type(page.id) ~= "number" then page.id = nb.next_id; nb.next_id = nb.next_id + 1 end
+            if page.id == nil then page.id = nb.next_id; nb.next_id = nb.next_id + 1 end
         end
         nb.pages = pages
     end
@@ -95,6 +107,30 @@ function Notebook:currentOps() return self.pages[self.index].ops end
 function Notebook:setCurrentOps(ops) self.pages[self.index].ops = ops or {} end
 function Notebook:currentSrc() return self.pages[self.index].src end
 function Notebook:srcOf(i) return self.pages[i] and self.pages[i].src end
+function Notebook:isGoodnotes() return self._gn ~= nil end
+
+-- Backing PDF path for page `i` (defaults to current page), if any.
+function Notebook:pagePdf(i)
+    local p = self.pages[i or self.index]
+    if p and p.pdf_path ~= nil then return p.pdf_path end
+    if self._gn then return nil end
+    return self.template and self.template.pdf_path or nil
+end
+
+-- Page pixel dimensions for page `i` (defaults to current page).
+function Notebook:pageSize(i)
+    local p = self.pages[i or self.index]
+    return (p and p.w) or self.w, (p and p.h) or self.h
+end
+
+-- Does this notebook reference any backing PDF on any page or template?
+function Notebook:hasAnyPdf()
+    if self.template and self.template.pdf_path then return true end
+    for _, p in ipairs(self.pages) do
+        if p.pdf_path then return true end
+    end
+    return false
+end
 
 -- Stamp page i (the current page by default) as changed now.
 function Notebook:touch(i)
@@ -134,11 +170,25 @@ function Notebook:pageTemplate(i)
     return view
 end
 
+local function inheritPageTemplate(page, cur)
+    if not cur then return end
+    page.paper = cur.paper
+    page.w, page.h = cur.w, cur.h
+    page._gn_paper_rgb = cur._gn_paper_rgb and deepcopyNoGn(cur._gn_paper_rgb) or nil
+    if cur._gn_builtin_tpl then
+        page._gn_template_id = cur._gn_template_id
+        page._gn_tpl_spec = cur._gn_tpl_spec
+        page.pdf_path = cur.pdf_path
+        page.src = cur.src
+        page._gn_builtin_tpl = true
+    end
+end
+
 -- Insert a blank page after the current one, on the same paper, and move to it.
 -- Returns the index.
 function Notebook:addPage()
     local page = self:newPage()
-    page.paper = self.pages[self.index] and self.pages[self.index].paper
+    inheritPageTemplate(page, self.pages[self.index])
     table.insert(self.pages, self.index + 1, page)
     self.index = self.index + 1
     return self.index
@@ -148,7 +198,7 @@ end
 -- Returns the index.
 function Notebook:insertPageBefore()
     local page = self:newPage()
-    page.paper = self.pages[self.index] and self.pages[self.index].paper
+    inheritPageTemplate(page, self.pages[self.index])
     table.insert(self.pages, self.index, page)
     return self.index
 end
@@ -158,7 +208,12 @@ end
 function Notebook:duplicatePage()
     local p = self.pages[self.index]
     local copy = self:newPage(p.src)
-    copy.ops, copy.title, copy.paper = deepcopy(p.ops), p.title, deepcopy(p.paper)
+    copy.ops, copy.title, copy.paper = deepcopyNoGn(p.ops), p.title, deepcopyNoGn(p.paper)
+    copy.w, copy.h, copy.pdf_path = p.w, p.h, p.pdf_path
+    copy._gn_template_id = p._gn_template_id
+    copy._gn_tpl_spec = p._gn_tpl_spec
+    copy._gn_paper_rgb = deepcopyNoGn(p._gn_paper_rgb)
+    copy._gn_builtin_tpl = p._gn_builtin_tpl
     table.insert(self.pages, self.index + 1, copy)
     self.index = self.index + 1
     return self.index
@@ -196,8 +251,11 @@ end
 -- Returns the new page's index.
 function Notebook:putPage(page, same_pdf, style, at)
     local copy = self:newPage(same_pdf and page.src or nil)
+    if same_pdf and page.pdf_path then copy.pdf_path = page.pdf_path end
     style = style or page.paper
-    copy.ops, copy.title, copy.star = deepcopy(page.ops or {}), page.title, page.star
+    copy.ops, copy.title, copy.star = deepcopyNoGn(page.ops or {}), page.title, page.star
+    copy.w, copy.h = page.w, page.h
+    copy._gn_paper_rgb = deepcopyNoGn(page._gn_paper_rgb)
     copy.paper = (style and style ~= self.template.style) and style or nil
     at = math.max(1, math.min(#self.pages + 1, at or #self.pages + 1))
     table.insert(self.pages, at, copy)
@@ -209,12 +267,12 @@ end
 -- position `at`, keeping its id, so links to it work again, unless another
 -- page has that id now. Returns its index.
 function Notebook:insertPage(page, at)
-    local taken = type(page.id) ~= "number"
+    local taken = (page.id == nil)
     for _, p in ipairs(self.pages) do if p.id == page.id then taken = true end end
     if taken then
         page.id = self.next_id or 1
         self.next_id = page.id + 1
-    elseif page.id >= (self.next_id or 1) then
+    elseif type(page.id) == "number" and page.id >= (self.next_id or 1) then
         self.next_id = page.id + 1
     end
     page.ops = page.ops or {}

@@ -246,6 +246,12 @@ function InkAwayView:libraryMenu()
         option(_("Write on a PDF from this reader\u{2026}"),
             _("Pick a PDF that is already on this reader. It becomes a notebook in this folder."),
             function() self:openPdfAsNotebook(self._lib_dir) end, nil, "pdfpen")
+        option(_("Import Goodnotes file\u{2026}"),
+            _("Pick a Goodnotes file (.goodnotes) from this reader. It opens directly in this folder."),
+            function() self:openGoodnotesPicker(self._lib_dir) end, nil, "notebook")
+        option(_("Import Goodnotes templates\u{2026}"),
+            _("Pick a .goodnotes file containing page templates to add to Ink Away's Goodnotes template library."),
+            function() self:openGoodnotesTemplatePackPicker() end, nil, "template")
         option(_("Cloud sync\u{2026}"), self:syncMenuHint(), function() self:openSync() end, nil, "cloud")
         if Clips.isClipsDir(self._lib_dir) then self:clipsMenuRows(content, content_w, menu, field) end
         add(VerticalSpan:new{ width = S(16) })
@@ -421,7 +427,8 @@ function InkAwayView:promptRenameItem(it)
             local name = (text or ""):gsub("[/\\]", "_"):match("^%s*(.-)%s*$")
             if name == "" or name == it.label then return end
             local dir = Storage.dirName(it.path)
-            local ext = it.picture and (Storage.baseName(it.path):match("%.([^.]+)$") or "jpg") or Project.EXT
+            local ext = it.picture and (Storage.baseName(it.path):match("%.([^.]+)$") or "jpg")
+                or Project.extOf(it.path)
             local new = it.folder and Storage.join(dir, name) or Storage.join(dir, Storage.fileName(name, ext))
             if Storage.exists(new) and new:lower() ~= it.path:lower() then
                 self:tell(string.format(
@@ -694,18 +701,22 @@ function InkAwayView:renderDocThumb(path, maxw, maxh)
     local data = Project.load(path)
     if not data then return nil end
     local W, H = self.view.canvas_w, self.view.canvas_h
+    local nb_page1 = Project.isNotebook(data) and data.pages and data.pages[1]
+    if nb_page1 and nb_page1.w and nb_page1.h then W, H = nb_page1.w, nb_page1.h end
     local scratch = Blitbuffer.new(W, H, self.canvas_bb and self.canvas_bb:getType() or Blitbuffer.TYPE_BBRGB32)
     local ops, bg, template
     if Project.isNotebook(data) then
         local nb = Notebook.fromData(data)
         local page = nb.pages[1]
         ops, template = page.ops, nb:pageTemplate(1)
-        if template.pdf_path and page.src then
-            local doc = (self._nb_pdf_path == template.pdf_path) and self._nb_pdf_doc
+        local pdf_path = nb:pagePdf(1)
+        if pdf_path and page.src then
+            local doc = self.openNotebookPdf and self:openNotebookPdf(pdf_path)
+                or (self._nb_pdf_path == pdf_path and self._nb_pdf_doc)
             local own
             if not doc then
                 local ok, d = pcall(function()
-                    return require("document/documentregistry"):openDocument(template.pdf_path)
+                    return require("document/documentregistry"):openDocument(pdf_path)
                 end)
                 doc, own = ok and d or nil, true
             end

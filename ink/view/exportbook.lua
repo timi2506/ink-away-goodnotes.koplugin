@@ -51,6 +51,7 @@ local InkAwayView = {}
 -- The PDF an export can be an edit of: a PDF notebook's own, or a PDF book's.
 function InkAwayView:exportPdf()
     if self.book then return BookExport.pdfPath(self.book) end
+    if self.notebook and self.notebook:isGoodnotes() then return nil end
     local t = self.notebook and self.notebook.template
     return t and t.pdf_path or nil
 end
@@ -351,30 +352,56 @@ function InkAwayView:notebookSpec(o)
             return to.id and at[to.id]
         end)
     end
-    if nb.template.pdf_path then
-        self:ensureNotebookPDF()
-        local doc = self._nb_pdf_doc
+    if nb:hasAnyPdf() then
+        local own_docs, docs = {}, {}
+        local function docFor(pdf_path)
+            if not pdf_path then return nil end
+            if docs[pdf_path] ~= nil then return docs[pdf_path] or nil end
+            local cached = (self._nb_pdf_docs and self._nb_pdf_docs[pdf_path])
+                or (self._nb_pdf_path == pdf_path and self._nb_pdf_doc)
+            if cached and cached ~= false then
+                docs[pdf_path] = cached
+                return cached
+            end
+            local ok, opened = pcall(function() return require("document/documentregistry"):openDocument(pdf_path) end)
+            if ok and opened then
+                docs[pdf_path] = opened
+                own_docs[pdf_path] = opened
+                return opened
+            end
+            docs[pdf_path] = false
+            return nil
+        end
+        spec.done = function()
+            for _p, d in pairs(own_docs) do pcall(function() d:close() end) end
+            own_docs = {}
+        end
         -- the PDF's own page size: a page added to the notebook takes the one before's
         local per_px
         spec.box = function(j)
-            local src = nb.pages[sel[j]] and nb.pages[sel[j]].src
-            local m = src and doc and fitMap(doc, src, nb.w, nb.h)
+            local idx = sel[j]
+            local pg = nb.pages[idx]
+            local pw, ph = nb:pageSize(idx)
+            local doc = docFor(nb:pagePdf(idx))
+            local m = pg and pg.src and doc and fitMap(doc, pg.src, pw, ph)
             if m then per_px = 1 / m.s end
-            return nb.w * (per_px or 1), nb.h * (per_px or 1)
+            return pw * (per_px or 1), ph * (per_px or 1)
         end
-    end
-    if nb.template.pdf_path and o.include_bg then
-        local doc = self._nb_pdf_doc
-        spec.bg = function(j, s)
-            s = s or 1
-            local src = nb.pages[sel[j]] and nb.pages[sel[j]].src
-            local img = src and self:renderPdfPage(doc, src, nb.w * s, nb.h * s) or nil
-            if not img then return nil end
-            local rgba = bbToRGBA(img, nb.w * s, nb.h * s)
-            img:free()
-            return rgba
+        if o.include_bg then
+            spec.bg = function(j, s)
+                s = s or 1
+                local idx = sel[j]
+                local pg = nb.pages[idx]
+                local pw, ph = nb:pageSize(idx)
+                local doc = docFor(nb:pagePdf(idx))
+                local img = pg and pg.src and doc and self:renderPdfPage(doc, pg.src, pw * s, ph * s) or nil
+                if not img then return nil end
+                local rgba = bbToRGBA(img, pw * s, ph * s)
+                img:free()
+                return rgba
+            end
+            spec.bg_opaque, spec.quality = true, 80   -- rendered PDF pages are drawn on white
         end
-        spec.bg_opaque, spec.quality = true, 80   -- rendered PDF pages are drawn on white
     end
     return spec
 end

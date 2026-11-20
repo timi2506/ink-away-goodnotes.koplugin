@@ -8,6 +8,13 @@ versions marked *Prerelease* were test builds.
 
 ## [Unreleased]
 
+## [4.6.0] - 2026-11-20
+
+### Added
+
+- **Native `.goodnotes` document support.** Import `.goodnotes` notebooks directly from the Library menu, New Notebook sheet, KOReader File Browser long-press, or Wi-Fi transfer; edit them directly in Ink Away while preserving untouched Goodnotes strokes, shapes, rich text, sticky notes, images, PDFs, UUIDs, and CRDT history; and export native `.inkaway` notebooks or drawings to `.goodnotes`.
+- **Goodnotes Templates & Paper Switching.** Bundled 6 Goodnotes templates (`Dotted`, `Grid`, `Blank`, `Ruled Narrow`, `Ruled Wide`, `Music`) with on-the-fly **Dark**, **White**, and **Yellow** paper recoloring, per-page template replacement and insertion inside `.goodnotes` notebooks, and importing custom `.goodnotes` template packs.
+
 ## [4.5.2] - 2026-11-17
 
 ### Added

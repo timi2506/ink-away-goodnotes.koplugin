@@ -424,6 +424,7 @@ local function makeWork(o)
             validate = function(rel, path)
                 if rel == Prefs.REL then return Prefs.valid(path) end
                 if rel:match("/inkaway%.lua$") then return require("ink/reader/bookink").valid(path) end
+                if rel:match("%.goodnotes$") then return require("ink/goodnotes/document").validate(path) end
                 if not rel:match("%.inkaway$") then return true end
                 local data, err = Project.load(path)
                 if data then return true end

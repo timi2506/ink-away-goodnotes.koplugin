@@ -6,6 +6,7 @@ dist/
 
 # Keep the release workflow tracked 
 !.github/**
+**/.DS_Store
 
 # but do keep the README screenshots
 !assets/screenshots/**

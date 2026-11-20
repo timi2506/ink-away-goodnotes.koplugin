@@ -155,8 +155,11 @@ function Cover.pageImage(nb, w, h)
     local Transform = require("ink/transform")
     local page = nb.pages[1]
     local template = pageTemplate(nb)
-    local k = math.min(1, w / nb.w)
-    local sw, sh = math.max(1, math.floor(nb.w * k + 0.5)), math.max(1, math.floor(nb.h * k + 0.5))
+    local pw, ph
+    if nb.pageSize then pw, ph = nb:pageSize(1) else pw, ph = nb.w, nb.h end
+    local pdf_path = nb.pagePdf and nb:pagePdf(1) or template.pdf_path
+    local k = math.min(1, w / pw)
+    local sw, sh = math.max(1, math.floor(pw * k + 0.5)), math.max(1, math.floor(ph * k + 0.5))
     local canvas = Canvas.new(sw, sh)
     local ops = {}
     for i, op in ipairs(page.ops) do ops[i] = Transform.scale(canvas:cloneOp(op), 0, 0, k) end
@@ -164,7 +167,7 @@ function Cover.pageImage(nb, w, h)
     -- (whole pixels: a ruling at a fractional row lands its colour channels on
     -- different rows, tinting the lines)
     if template.size then template.size = math.max(2, math.floor(template.size * k + 0.5)) end
-    local pdf = template.pdf_path and page.src and Storage.exists(template.pdf_path)
+    local pdf = pdf_path and page.src and Storage.exists(pdf_path)
     -- see-through over a PDF page, else on the page's paper
     local buf, ow, oh = Export.buildPNGRGBA(canvas, { template = template, white = not pdf })
     local ink = BB.new(ow, oh, BB.TYPE_BBRGB32, buf)
@@ -172,7 +175,7 @@ function Cover.pageImage(nb, w, h)
     local paper = template.paper
     out:paintRectRGB32(0, 0, w, out:getHeight(), BB.ColorRGB32(paper[1], paper[2], paper[3], 0xFF))
     if pdf then
-        local bg = pdfPage(template.pdf_path, page.src, sw, sh)
+        local bg = pdfPage(pdf_path, page.src, sw, sh)
         if bg then
             out:blitFrom(bg, math.floor((sw - bg:getWidth()) / 2), math.floor((sh - bg:getHeight()) / 2),
                 0, 0, bg:getWidth(), bg:getHeight())
@@ -217,7 +220,8 @@ function Cover.paperImage(nb, w, h)
     local k = w / (nb.w or w)
     local rule = BB.ColorRGB32(t.rule[1], t.rule[2], t.rule[3], 0xFF)
     local size = (t.size or 40) * k
-    if not t.pdf_path and size >= 3 then
+    local pdf_path = nb.pagePdf and nb:pagePdf(1) or t.pdf_path
+    if not pdf_path and size >= 3 then
         pcall(Template.render, t.style, w, h, size, function(x, y, len)
             x, y = math.floor(x), math.floor(y)
             if y >= 0 and y < h then out:paintRectRGB32(x, y, math.max(1, math.floor(len)), 1, rule) end

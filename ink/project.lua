@@ -10,6 +10,17 @@ local Storage = require("ink/storage")
 local Project = {}
 
 Project.EXT = "inkaway"
+Project.GN_EXT = "goodnotes"
+
+-- Does `path` (or file name) name a Goodnotes document?
+function Project.isGoodnotes(path)
+    return type(path) == "string" and path:lower():match("%." .. Project.GN_EXT .. "$") ~= nil
+end
+
+-- The document file extension for `path` ("goodnotes" or "inkaway").
+function Project.extOf(path)
+    return Project.isGoodnotes(path) and Project.GN_EXT or Project.EXT
+end
 
 -- Serialize a Lua value into `out`: numbers, booleans, strings, and tables with
 -- an array part and string keys, which is all an ops list holds.
@@ -32,7 +43,7 @@ local function ser(v, out)
         local n = #v
         for i = 1, n do ser(v[i], out); out[#out + 1] = "," end
         for k, val in pairs(v) do
-            if type(k) == "string" then
+            if type(k) == "string" and k:sub(1, 3) ~= "_gn" then
                 out[#out + 1] = "[" .. string.format("%q", k) .. "]="
                 ser(val, out)
                 out[#out + 1] = ","
@@ -152,12 +163,18 @@ end
 
 -- Write a notebook to a file at `path`. Returns ok, err.
 function Project.saveNotebook(nb, path, cache, extra)
+    if Project.isGoodnotes(path) then
+        return require("ink/goodnotes/document").save(nb, path, extra)
+    end
     return Storage.writeAtomic(path, Project.serializeNotebook(nb, cache, extra))
 end
 
 -- Read a project file. Returns { w, h, ops } or nil, err. A save cut short
 -- after its temporary file was written leaves only that file; it is read then.
 function Project.load(path)
+    if Project.isGoodnotes(path) then
+        return require("ink/goodnotes/document").load(path)
+    end
     local f, err = io.open(path, "rb")
     if not f then f = io.open(path .. ".tmp", "rb") end
     if not f then return nil, err end

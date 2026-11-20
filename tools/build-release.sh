@@ -29,10 +29,11 @@ mkdir -p "$OUT/$NAME"
 cp -R _meta.lua main.lua ink README.md NOTICE.md LICENSE "$OUT/$NAME/"
 
 # Ink Away's Google Drive registration lives in ink/sync/localkeys.lua, which git
-# ignores (GitHub refuses a push with a Google client secret): every zip needs it.
+# ignores (GitHub refuses a push with a Google client secret). Fork builds
+# succeed without it (set REQUIRE_LOCALKEYS=1 to fail if absent).
 if ! grep -q 'gdrive_secret *= *"GOCSPX-' "$OUT/$NAME/ink/sync/localkeys.lua" 2>/dev/null; then
-    echo "ink/sync/localkeys.lua with gdrive_id and gdrive_secret is missing: Google Drive would not connect." >&2
-    exit 1
+    echo "Warning: ink/sync/localkeys.lua with gdrive_id and gdrive_secret is missing: built-in Google Drive app key will not be bundled." >&2
+    if [ "${REQUIRE_LOCALKEYS:-0}" = "1" ]; then exit 1; fi
 fi
 
 # Belt and suspenders: make sure nothing heavy or dev-only slipped in.
@@ -44,4 +45,4 @@ find "$OUT/$NAME" -name '.DS_Store' -delete 2>/dev/null || true
 echo "Built $ZIP"
 du -h "$ZIP"
 echo "Contents:"
-unzip -l "$ZIP" | awk '{print $4}' | grep -E '\.(lua|svg|md|txt|po|pot)$|LICENSE' | sed 's#^#  #'
+unzip -l "$ZIP" | awk '{print $4}' | grep -E '\.(lua|svg|md|txt|po|pot|pdf)$|LICENSE' | sed 's#^#  #'

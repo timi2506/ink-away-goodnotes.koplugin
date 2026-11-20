@@ -656,8 +656,9 @@ end
 local function paperKey(nb)
     local t = nb.template or {}
     local p = t.paper
+    local pdf = nb.pagePdf and nb:pagePdf(1) or t.pdf_path
     return table.concat({ tostring(t.style), tostring(t.size), tostring(t.strength),
-        type(p) == "table" and table.concat(p, ",") or tostring(p), tostring(t.pdf_path) }, "|")
+        type(p) == "table" and table.concat(p, ",") or tostring(p), tostring(pdf) }, "|")
 end
 
 -- A snapshot's width in pixels: the widest a cover shows the page.

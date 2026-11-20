@@ -41,7 +41,8 @@ local function S(px) return Screen:scaleBySize(px) end
 local InkAwayView = {}
 
 -- What may be sent, and how big.
-local LIMITS = { pdf = 300 * 1024 * 1024, image = 30 * 1024 * 1024, inkaway = 10 * 1024 * 1024 }
+local LIMITS = { pdf = 300 * 1024 * 1024, image = 30 * 1024 * 1024, inkaway = 10 * 1024 * 1024,
+    goodnotes = 300 * 1024 * 1024 }
 local MAX_PDF_PAGES = 2000             -- a PDF with more is not made into a notebook
 local MAX_PIXELS = 16 * 1000 * 1000   -- a picture larger than this is too much for a reader to open
 local RESERVE = 64 * 1024 * 1024      -- free space always left on the reader
@@ -52,7 +53,7 @@ InkAwayView.RECEIVE_LIMITS = { limits = LIMITS, max_pixels = MAX_PIXELS }
 -- Where things sent to the reader go: a folder each in Library > Imported.
 -- (One name in every language: a translated name would make a second folder
 -- whenever KOReader's language changed.)
-local SUB = { image = "Pictures", pdf = "PDFs", inkaway = "Notebooks and drawings" }
+local SUB = { image = "Pictures", pdf = "PDFs", inkaway = "Notebooks and drawings", goodnotes = "Goodnotes" }
 InkAwayView.IMPORTED_SUB = SUB
 function InkAwayView:importedFolder() return Storage.join(self:libraryDir(), "Imported") end
 
@@ -73,7 +74,8 @@ end
 -- Parts of uploads cut short by a power cut or a crash: removed when sharing
 -- starts again.
 function InkAwayView:clearUploadParts()
-    for _i, dir in ipairs({ self:importedPdfsDir(), self:importedDir("image"), self:importedDir("inkaway") }) do
+    for _i, dir in ipairs({ self:importedPdfsDir(), self:importedDir("image"), self:importedDir("inkaway"),
+            self:importedDir("goodnotes") }) do
         for _j, e in ipairs(dir and Storage.list(dir) or {}) do
             if e.mode == "file" and e.name:match("^%..*%.part$") then os.remove(e.path) end
         end
@@ -156,7 +158,7 @@ end
 -- Taking a file in
 ------------------------------------------------------------------------------
 
--- POST <token>/upload?kind=pdf|image|inkaway&name=...&batch=...&i=...&n=...
+-- POST <token>/upload?kind=pdf|image|inkaway|goodnotes&name=...&batch=...&i=...&n=...
 -- with the file as the body.
 function InkAwayView:sendUpload(req, reply)
     local send = self._send
@@ -166,7 +168,7 @@ function InkAwayView:sendUpload(req, reply)
     end
     local kind = req.query.kind
     local limit = LIMITS[kind]
-    if not limit then return jsonReply(reply, 415, false, "Only PDFs, JPEG and PNG pictures and Ink Away files.") end
+    if not limit then return jsonReply(reply, 415, false, "Only PDFs, JPEG and PNG pictures, Goodnotes and Ink Away files.") end
     local length = tonumber(req.headers and req.headers["content-length"] or "")
     if not length or length <= 0 or length % 1 ~= 0 then return jsonReply(reply, 411, false, "The file's size is missing.") end
     if length > limit then
@@ -218,10 +220,14 @@ function InkAwayView:uploadSink(kind, dir, sent_name, batch, i, n)
         -- checked as soon as its first bytes are here: anything else is refused at once
         if #head >= 16 or #chunk == 0 then
             local want = kind == "image" and (what == "jpg" or what == "png")
-                or kind == "pdf" and what == "pdf" or kind == "inkaway" and what == "inkaway"
+                or kind == "pdf" and what == "pdf"
+                or kind == "inkaway" and what == "inkaway"
+                or kind == "goodnotes" and Http.isZip(head)
             if not want then
                 return nil, kind == "image" and "Only JPEG and PNG pictures (or make it smaller on the page first)."
-                    or kind == "pdf" and "That isn't a PDF." or "That isn't an Ink Away file."
+                    or kind == "pdf" and "That isn't a PDF."
+                    or kind == "goodnotes" and "That isn't a Goodnotes file."
+                    or "That isn't an Ink Away file."
             end
         end
         if not f:write(chunk) then return nil, "The reader couldn't write it. Is it full?" end
@@ -239,7 +245,8 @@ function InkAwayView:uploadSink(kind, dir, sent_name, batch, i, n)
         if rf then rf:close() end
         what = Http.sniff(start)
         local ext = kind == "image" and what or kind
-        if not ((kind == "image" and (what == "jpg" or what == "png")) or what == kind) then
+        if not ((kind == "image" and (what == "jpg" or what == "png"))
+            or (kind == "goodnotes" and Http.isZip(start)) or what == kind) then
             os.remove(part)
             return jsonReply(reply, 415, false, "That file isn't what it says it is.")
         end
@@ -253,6 +260,13 @@ function InkAwayView:uploadSink(kind, dir, sent_name, batch, i, n)
                 os.remove(part)
                 return jsonReply(reply, 413, false, string.format(
                     "This picture is %d x %d, too large for an e-reader. Choose a smaller size on the page.", w, h))
+            end
+        elseif kind == "goodnotes" then
+            local valid, why = require("ink/goodnotes/document").validate(part)
+            if not valid then
+                logger.info("InkAway: a sent Goodnotes file was refused:", why)
+                os.remove(part)
+                return jsonReply(reply, 422, false, "The reader can't read this Goodnotes file.")
             end
         elseif kind == "inkaway" then
             -- read as data only, never run; then written again as Ink Away writes
@@ -297,6 +311,13 @@ function InkAwayView:uploadSink(kind, dir, sent_name, batch, i, n)
         elseif kind == "image" then
             self:arrived(arrival)
             jsonReply(reply, 200, true, string.format("Sent to %s.", self:importedPlace("image")))
+        elseif kind == "goodnotes" then
+            Folder.update(dir, function(d) Folder.add(d, name) end)
+            arrival.kind = "notebook"
+            arrival.from = "goodnotes"
+            arrival.name = Storage.stem(name)
+            self:arrived(arrival)
+            jsonReply(reply, 200, true, string.format("Sent to %s.", self:importedPlace("goodnotes")))
         else
             Folder.update(dir, function(d) Folder.add(d, name) end)
             arrival.kind = "notebook"
@@ -400,7 +421,7 @@ end
 -- once Don't ask again is on.
 function InkAwayView:noteArrivals()
     local send = self._send
-    local count = { image = 0, pdf = 0, inkaway = 0 }
+    local count = { image = 0, pdf = 0, goodnotes = 0, inkaway = 0 }
     for _i, a in ipairs(send.noted) do
         local k = a.kind == "image" and "image" or (a.from or "pdf")
         count[k] = count[k] + 1
@@ -408,9 +429,10 @@ function InkAwayView:noteArrivals()
     send.noted = {}
     local parts = {}
     local words = { pdf = { _("1 notebook from a PDF"), _("%d notebooks from PDFs") },
+        goodnotes = { _("1 Goodnotes notebook"), _("%d Goodnotes notebooks") },
         inkaway = { _("1 notebook or drawing"), _("%d notebooks and drawings") },
         image = { _("1 picture"), _("%d pictures") } }
-    for _i, k in ipairs({ "pdf", "inkaway", "image" }) do
+    for _i, k in ipairs({ "pdf", "goodnotes", "inkaway", "image" }) do
         if count[k] > 0 then
             local what = count[k] == 1 and words[k][1] or string.format(words[k][2], count[k])
             parts[#parts + 1] = string.format(_("%s in %s"), what, self:importedPlace(k))

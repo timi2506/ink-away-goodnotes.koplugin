@@ -152,6 +152,7 @@ var LV={orig:null,large:{m:3000,q:0.85},medium:{m:2000,q:0.8},small:{m:1400,q:0.
 function sz(b){return b<1048576?Math.max(1,Math.round(b/1024))+' KB':(b/1048576).toFixed(1)+' MB';}
 function kindOf(f){var n=f.name.toLowerCase();
  if(/\.pdf$/.test(n)||f.type==='application/pdf')return 'pdf';
+ if(/\.goodnotes$/.test(n))return 'goodnotes';
  if(/\.inkaway$/.test(n))return 'inkaway';
  if(/^image\//.test(f.type)||/\.(jpe?g|png|heic|heif|webp|gif|bmp)$/.test(n))return 'image';
  return null;}
@@ -197,7 +198,7 @@ inp.addEventListener('change',function(){
  items=[];list.textContent='';msg.textContent='';halted=false;
  Array.prototype.forEach.call(inp.files,function(f){var k=kindOf(f),li=el('li'),n=el('div','n',f.name),s=el('div','s','');
   li.appendChild(n);li.appendChild(s);list.appendChild(li);
-  if(!k){s.className='e';s.textContent='Only PDFs, pictures and Ink Away files.';return;}
+  if(!k){s.className='e';s.textContent='Only PDFs, pictures, Goodnotes and Ink Away files.';return;}
   items.push({f:f,kind:k,li:li,s:s,res:{}});});
  lv.hidden=!items.some(function(i){return i.kind==='image';});
  act.hidden=items.length===0;prepare();});
@@ -235,13 +236,13 @@ function Page.uploadCard(u)
         return '<div class="add"><h2>Add to Ink Away</h2><p>To send PDFs and pictures to the reader from here, '
             .. 'turn on <b>Allow adding files</b> on the reader, then reload this page.</p></div>'
     end
-    local conf = string.format('window.IA={url:"%s",maxpx:%d,lim:{pdf:%d,image:%d,inkaway:%d}};',
-        esc(u.url), u.max_pixels, u.limits.pdf, u.limits.image, u.limits.inkaway)
+    local conf = string.format('window.IA={url:"%s",maxpx:%d,lim:{pdf:%d,image:%d,inkaway:%d,goodnotes:%d}};',
+        esc(u.url), u.max_pixels, u.limits.pdf, u.limits.image, u.limits.inkaway, u.limits.goodnotes or u.limits.pdf)
     return '<div class="add"><h2>Add to Ink Away</h2>'
         .. '<p>What you send arrives on the reader in Library › Imported, each kind in its own folder: '
-        .. 'PDFs (as notebooks you can write on), Pictures, and Notebooks and drawings.</p>'
+        .. 'PDFs (as notebooks you can write on), Pictures, Goodnotes notebooks, and Notebooks and drawings.</p>'
         .. '<label class="btn main">Choose files<input id="f" type="file" multiple '
-        .. 'accept=".pdf,.inkaway,application/pdf,image/*"></label>'
+        .. 'accept=".pdf,.inkaway,.goodnotes,application/pdf,image/*"></label>'
         .. '<div id="lv" class="levels" hidden><div class="lt">Picture size: smaller pictures send faster '
         .. 'and take less space on the reader</div>'
         .. '<label><input type="radio" name="lv" value="orig">Original</label>'

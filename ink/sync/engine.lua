@@ -181,7 +181,7 @@ local function walk(root, clashes)
             elseif e.mode == "file" and e.name:sub(-#Engine.TMP) == Engine.TMP and os.time() - (e.mtime or 0) > 86400 then
                 os.remove(e.path)   -- (left by a run that was cut short)
             elseif e.mode == "file" and not reserved(rel)
-                    and (e.name:match("%.inkaway$") or e.name == ".inkaway-folder") then
+                    and (e.name:match("%.inkaway$") or e.name:match("%.goodnotes$") or e.name == ".inkaway-folder") then
                 local k = lower(rel)
                 if out[k] and out[k] ~= rel then clashes[#clashes + 1] = { out[k], rel } end
                 if not out[k] or rel < out[k] then out[k] = rel end
@@ -407,7 +407,10 @@ end
 -- A run
 ------------------------------------------------------------------------------
 
-local PRIORITY = function(rel) return rel:match("%.inkaway$") and 2 or (rel == ".inkaway-folder" or rel:match("/%.inkaway%-folder$")) and 3 or 1 end
+local PRIORITY = function(rel)
+    return (rel:match("%.inkaway$") or rel:match("%.goodnotes$")) and 2
+        or (rel == ".inkaway-folder" or rel:match("/%.inkaway%-folder$")) and 3 or 1
+end
 
 local function note(res, rel, action, status, err)
     res.items[#res.items + 1] = { rel = rel, action = action, status = status, err = err }

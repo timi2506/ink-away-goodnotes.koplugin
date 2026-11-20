@@ -154,8 +154,10 @@ function InkAwayView:reshapeToScreen()
     -- fitted to the screen instead (see pageNeedsFit)
     if self.nb_fit and self.notebook then return false end
     if v.canvas_w == W and v.canvas_h == H then return false end   -- already that shape
-    -- a PDF-backed notebook's pages are the imported PDF at its own size
-    if self.notebook and self.notebook.template and self.notebook.template.pdf_path then
+    -- a PDF-backed or Goodnotes notebook's pages keep their own size
+    if self.notebook and ((self.notebook.isGoodnotes and self.notebook:isGoodnotes())
+        or (self.notebook.hasAnyPdf and self.notebook:hasAnyPdf())
+        or (self.notebook.template and self.notebook.template.pdf_path)) then
         return false
     end
     if self.notebook then self.notebook.w, self.notebook.h = W, H end

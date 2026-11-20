@@ -50,6 +50,8 @@ suites[#suites + 1] = "tests/booxinput.lua"
 suites[#suites + 1] = "tests/booxdisplay.lua"
 suites[#suites + 1] = "tests/capture.lua"
 suites[#suites + 1] = "tests/capturegestures.lua"
+suites[#suites + 1] = "tests/goodnotes.lua"
+suites[#suites + 1] = "tests/goodnotes_view.lua"
 for _, suite in ipairs({ "tests/ocr_api.lua", "tests/ocr_job.lua", "tests/ocr_image.lua", "tests/ocr_view.lua" }) do
     suites[#suites + 1] = suite
 end
